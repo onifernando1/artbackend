@@ -1,0 +1,24 @@
+{
+  "name": "artbackend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --watch server/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onifernando1/artbackend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/onifernando1/artbackend/issues"
+  },
+  "homepage": "https://github.com/onifernando1/artbackend#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
