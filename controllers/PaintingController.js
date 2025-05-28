@@ -1,4 +1,5 @@
 const Painting = require("../models/Painting");
+const cloudinary = require("cloudinary").v2;
 
 async function getPaintingMiddleware(req, res, next) {
   let painting;
@@ -24,7 +25,7 @@ async function getPaintingMiddleware(req, res, next) {
 
 exports.getPaintingMiddleware = getPaintingMiddleware;
 
-exports.postPainting = async (req, res) => {
+exports.createPainting = async (req, res) => {
   const painting = new Painting({
     name: req.body.name,
     category: req.body.category,
@@ -152,9 +153,24 @@ exports.updatePaintingById = async (req, res) => {
 
 exports.deletePaintingById = async (req, res) => {
   try {
+    // Check if there's an image associated and delete it from Cloudinary first
+    if (req.painting.publicId) {
+      try {
+        await cloudinary.uploader.destroy(req.painting.publicId);
+        console.log(`Image ${req.painting.publicId} deleted from Cloudinary.`);
+      } catch (destroyErr) {
+        console.error("Error deleting image from Cloudinary:", destroyErr);
+        // Log the error, but still proceed to delete the painting document
+        // as the core task is to remove the painting record.
+      }
+    }
+
+    // Then, delete the painting document from MongoDB
     await req.painting.deleteOne();
 
-    res.status(200).json({ message: "Painting deleted successfully" });
+    res
+      .status(200)
+      .json({ message: "Painting and associated image deleted successfully" });
   } catch (err) {
     console.error("Error deleting painting:", err);
     res.status(500).json({

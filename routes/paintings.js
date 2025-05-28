@@ -6,7 +6,7 @@ const paintingController = require("../controllers/paintingController");
 // --- Define Routes ---
 
 // Post Method (e.g., POST /painting/post)
-router.post("/", paintingController.postPainting);
+router.post("/", paintingController.createPainting);
 
 // Get All Method (e.g., GET /painting/getAll)
 router.get("/", paintingController.getAllPaintings);
