@@ -5,33 +5,33 @@ const paintingController = require("../controllers/paintingController");
 
 // --- Define Routes ---
 
-// Post Method (e.g., POST /painting/post)
+// IMPORTANT: Specific routes must come BEFORE general (parameterized) routes.
+
+// 1. Reorder Paintings (most specific PATCH route)
+router.patch("/reorder", paintingController.reorderPaintings); // MOVED THIS HERE!
+
+// 2. Post Method (e.g., POST /painting)
 router.post("/", paintingController.createPainting);
 
-// Get All Method (e.g., GET /painting/getAll)
+// 3. Get All Method (e.g., GET /painting)
 router.get("/", paintingController.getAllPaintings);
 
-// Get by ID Method (e.g., GET /painting/getOne/123)
+// 4. Get, Update, and Delete by ID Methods (general, use :id parameter)
+// These routes use the getPaintingMiddleware to fetch a specific painting.
 router.get(
   "/:id",
   paintingController.getPaintingMiddleware,
   paintingController.getPaintingById
 );
-
-// Update by ID Method (e.g., PATCH /painting/update/123)
 router.patch(
   "/:id",
   paintingController.getPaintingMiddleware,
   paintingController.updatePaintingById
 );
-
-// Delete by ID Method (e.g., DELETE /painting/delete/123)
 router.delete(
   "/:id",
   paintingController.getPaintingMiddleware,
   paintingController.deletePaintingById
 );
-
-router.patch("/reorder", paintingController.reorderPaintings); // ADD THIS LINE
 
 module.exports = router;

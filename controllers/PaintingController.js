@@ -180,66 +180,53 @@ exports.deletePaintingById = async (req, res) => {
 };
 
 exports.reorderPaintings = async (req, res) => {
-  // req.body is expected to be an array like: [{ _id: 'abc', order: 0 }, { _id: 'xyz', order: 1 }]
+  console.log("--- REORDER PAINTINGS ENDPOINT HIT ---"); // You should see this!
+  console.log("Received request body:", JSON.stringify(req.body, null, 2)); // <--- WE NEED THIS OUTPUT!
+
   const updates = req.body;
 
   if (
     !Array.isArray(updates) ||
     updates.some((item) => !item._id || typeof item.order === "undefined")
   ) {
-    return res
-      .status(400)
-      .json({
-        message:
-          "Invalid request body. Expected an array of objects with _id and order.",
-      });
+    console.log("Invalid request body detected."); // Add this
+    return res.status(400).json({
+      message:
+        "Invalid request body. Expected an array of objects with _id and order.",
+    });
   }
 
   try {
-    // Use a Promise.all to await all individual updates concurrently
     const updatePromises = updates.map((update) => {
-      // Find the painting by its _id and update its 'order' field
+      console.log(
+        `Attempting to update ID: ${update._id} with order: ${update.order}`
+      ); // Add this
       return Painting.findByIdAndUpdate(
         update._id,
         { order: update.order },
-        { new: true, runValidators: true } // Return the updated doc, run schema validators
+        { new: true, runValidators: true }
       );
     });
 
-    // Await all updates to complete
     const updatedPaintings = await Promise.all(updatePromises);
 
-    // Check if any paintings were not found/updated (optional, depends on strictness)
+    // Check for null results
     if (updatedPaintings.some((doc) => doc === null)) {
-      console.warn("Some paintings were not found during reorder update.");
-      // You might return a partial success or a 404/400 for specific missing IDs
+      console.warn(
+        "Some paintings were not found during reorder update. IDs might be incorrect."
+      ); // Add this
     }
 
-    res
-      .status(200)
-      .json({
-        message: "Painting order updated successfully.",
-        updatedCount: updatedPaintings.length,
-      });
+    console.log(
+      "All updates completed. Updated paintings:",
+      updatedPaintings.filter((doc) => doc !== null).length
+    ); // Add this
+    res.status(200).json({
+      message: "Painting order updated successfully.",
+      updatedCount: updatedPaintings.filter((doc) => doc !== null).length,
+    });
   } catch (err) {
-    console.error("Error reordering paintings:", err);
-
-    // Handle specific validation errors if any occur during update
-    if (err.name === "ValidationError") {
-      const errors = {};
-      for (let field in err.errors) {
-        errors[field] = err.errors[field].message;
-      }
-      return res
-        .status(400)
-        .json({ message: "Validation failed during reorder", errors });
-    }
-
-    res
-      .status(500)
-      .json({
-        message:
-          "An internal server error occurred while reordering paintings.",
-      });
+    console.error("Error in reorderPaintings catch block:", err); // Add this
+    // ... (rest of your error handling) ...
   }
 };
