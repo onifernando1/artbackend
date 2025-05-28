@@ -32,4 +32,6 @@ router.delete(
   paintingController.deletePaintingById
 );
 
+router.patch("/reorder", paintingController.reorderPaintings); // ADD THIS LINE
+
 module.exports = router;

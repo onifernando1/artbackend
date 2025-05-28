@@ -178,3 +178,68 @@ exports.deletePaintingById = async (req, res) => {
     });
   }
 };
+
+exports.reorderPaintings = async (req, res) => {
+  // req.body is expected to be an array like: [{ _id: 'abc', order: 0 }, { _id: 'xyz', order: 1 }]
+  const updates = req.body;
+
+  if (
+    !Array.isArray(updates) ||
+    updates.some((item) => !item._id || typeof item.order === "undefined")
+  ) {
+    return res
+      .status(400)
+      .json({
+        message:
+          "Invalid request body. Expected an array of objects with _id and order.",
+      });
+  }
+
+  try {
+    // Use a Promise.all to await all individual updates concurrently
+    const updatePromises = updates.map((update) => {
+      // Find the painting by its _id and update its 'order' field
+      return Painting.findByIdAndUpdate(
+        update._id,
+        { order: update.order },
+        { new: true, runValidators: true } // Return the updated doc, run schema validators
+      );
+    });
+
+    // Await all updates to complete
+    const updatedPaintings = await Promise.all(updatePromises);
+
+    // Check if any paintings were not found/updated (optional, depends on strictness)
+    if (updatedPaintings.some((doc) => doc === null)) {
+      console.warn("Some paintings were not found during reorder update.");
+      // You might return a partial success or a 404/400 for specific missing IDs
+    }
+
+    res
+      .status(200)
+      .json({
+        message: "Painting order updated successfully.",
+        updatedCount: updatedPaintings.length,
+      });
+  } catch (err) {
+    console.error("Error reordering paintings:", err);
+
+    // Handle specific validation errors if any occur during update
+    if (err.name === "ValidationError") {
+      const errors = {};
+      for (let field in err.errors) {
+        errors[field] = err.errors[field].message;
+      }
+      return res
+        .status(400)
+        .json({ message: "Validation failed during reorder", errors });
+    }
+
+    res
+      .status(500)
+      .json({
+        message:
+          "An internal server error occurred while reordering paintings.",
+      });
+  }
+};
