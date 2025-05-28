@@ -25,6 +25,32 @@
         color: #007bff;
         margin-bottom: 30px;
       }
+      .category-nav {
+        text-align: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+      }
+      .category-button {
+        background-color: #e9ecef;
+        color: #495057;
+        border: 1px solid #ced4da;
+        padding: 10px 18px;
+        margin: 0 8px 10px 8px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 1em;
+        transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+        white-space: nowrap; /* Prevent wrapping */
+      }
+      .category-button:hover {
+        background-color: #dee2e6;
+      }
+      .category-button.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+      }
       .gallery-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -43,7 +69,6 @@
         }
       }
 
-      /* Styles for draggable items */
       .painting-card {
         background-color: #fff;
         border: 1px solid #ddd;
@@ -54,7 +79,7 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        cursor: grab; /* Indicate draggable */
+        cursor: grab;
       }
       .painting-card:hover {
         transform: translateY(-5px);
@@ -127,13 +152,15 @@
       }
       .sortable-chosen {
         box-shadow: 0 0 0 2px #007bff;
-      } /* Optional: highlight chosen item */
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <h1>Our Painting Gallery (Drag & Drop to Reorder!)</h1>
       <a href="index.html" class="back-to-home">← Add New Painting</a>
+
+      <div id="categoryNav" class="category-nav"></div>
 
       <div id="galleryContainer" class="gallery-grid">
         <div id="loadingMessage" class="message loading">
@@ -144,19 +171,25 @@
           class="message error"
           style="display: none"
         ></div>
-        <div id="noPaintingsMessage" class="message" style="display: none">
-          No paintings found yet. Be the first to add one!
-        </div>
+        <div
+          id="noPaintingsMessage"
+          class="message"
+          style="display: none"
+        ></div>
       </div>
       <div id="reorderMessage" class="message" style="display: none"></div>
     </div>
 
     <script>
       const galleryContainer = document.getElementById("galleryContainer");
+      const categoryNav = document.getElementById("categoryNav"); // New element for category navigation
       const loadingMessage = document.getElementById("loadingMessage");
       const errorMessage = document.getElementById("errorMessage");
       const noPaintingsMessage = document.getElementById("noPaintingsMessage");
-      const reorderMessage = document.getElementById("reorderMessage"); // New element for reorder feedback
+      const reorderMessage = document.getElementById("reorderMessage");
+
+      let sortableInstance = null;
+      let currentCategory = null; // Track the currently selected category
 
       // Helper function to display messages
       function displayMessage(element, message, type, duration = 3000) {
@@ -172,15 +205,82 @@
         }
       }
 
-      // Initialize SortableJS
-      let sortableInstance = null; // To store the Sortable instance
+      async function fetchCategories() {
+        try {
+          // Fetch ALL paintings first to get unique categories
+          const response = await fetch("http://localhost:3000/painting");
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const allPaintings = await response.json();
 
-      async function fetchAndDisplayPaintings() {
+          // Extract unique categories
+          const categories = new Set(allPaintings.map((p) => p.category));
+          const uniqueCategories = Array.from(categories).sort(); // Sort categories alphabetically
+
+          renderCategoryNav(uniqueCategories);
+        } catch (error) {
+          console.error("Error fetching categories:", error);
+          displayMessage(
+            errorMessage,
+            `Error loading categories: ${error.message}`,
+            "error",
+            0
+          ); // Display indefinitely
+        }
+      }
+
+      function renderCategoryNav(categories) {
+        categoryNav.innerHTML = ""; // Clear previous buttons
+
+        // "All Categories" button
+        const allBtn = document.createElement("button");
+        allBtn.className =
+          "category-button" + (currentCategory === null ? " active" : "");
+        allBtn.textContent = "All Categories";
+        allBtn.addEventListener("click", () => {
+          currentCategory = null;
+          updateActiveCategoryButton(null);
+          fetchAndDisplayPaintings(); // Fetch all paintings
+        });
+        categoryNav.appendChild(allBtn);
+
+        // Individual category buttons
+        categories.forEach((category) => {
+          const button = document.createElement("button");
+          button.className =
+            "category-button" + (currentCategory === category ? " active" : "");
+          button.textContent = category;
+          button.addEventListener("click", () => {
+            currentCategory = category;
+            updateActiveCategoryButton(category);
+            fetchAndDisplayPaintings(category); // Fetch paintings for this category
+          });
+          categoryNav.appendChild(button);
+        });
+      }
+
+      function updateActiveCategoryButton(activeCategory) {
+        document.querySelectorAll(".category-button").forEach((button) => {
+          if (
+            button.textContent === "All Categories" &&
+            activeCategory === null
+          ) {
+            button.classList.add("active");
+          } else if (button.textContent === activeCategory) {
+            button.classList.add("active");
+          } else {
+            button.classList.remove("active");
+          }
+        });
+      }
+
+      async function fetchAndDisplayPaintings(category = null) {
         loadingMessage.style.display = "block";
         errorMessage.style.display = "none";
         noPaintingsMessage.style.display = "none";
+        reorderMessage.style.display = "none"; // Clear reorder message on new fetch
         galleryContainer.innerHTML = ""; // Clear previous content
-        reorderMessage.style.display = "none"; // Clear any previous reorder messages
 
         // Destroy existing Sortable instance if it exists to prevent re-initialization issues
         if (sortableInstance) {
@@ -189,7 +289,12 @@
         }
 
         try {
-          const response = await fetch("http://localhost:3000/painting"); // GET all paintings
+          let url = "http://localhost:3000/painting";
+          if (category) {
+            url += `?category=${encodeURIComponent(category)}`; // Add category query parameter
+          }
+
+          const response = await fetch(url);
           const paintings = await response.json();
 
           loadingMessage.style.display = "none"; // Hide loading message
@@ -197,15 +302,16 @@
           if (response.ok) {
             if (paintings.length === 0) {
               noPaintingsMessage.style.display = "block";
+              noPaintingsMessage.textContent = category
+                ? `No paintings found in the "${category}" category.`
+                : `No paintings found yet. Be the first to add one!`;
             } else {
-              // Sort paintings by their 'order' property before displaying
-              paintings.sort((a, b) => a.order - b.order);
-
+              // Paintings are already sorted by 'order' from the backend
               paintings.forEach((painting) => {
                 const paintingCard = document.createElement("div");
                 paintingCard.className = "painting-card";
-                // Store the painting ID on the element for easy retrieval
-                paintingCard.dataset.id = painting._id;
+                paintingCard.dataset.id = painting._id; // Store the painting ID
+                paintingCard.dataset.order = painting.order; // Store the current order for debugging/reference
 
                 paintingCard.innerHTML = `
                                 <img src="${
@@ -235,19 +341,16 @@
                 galleryContainer.appendChild(paintingCard);
               });
 
-              // Initialize SortableJS after paintings are rendered
+              // Initialize SortableJS only if there are paintings to sort
               sortableInstance = Sortable.create(galleryContainer, {
                 animation: 150,
-                ghostClass: "sortable-ghost", // Class name for the drop placeholder
-                chosenClass: "sortable-chosen", // Class name for the chosen item
+                ghostClass: "sortable-ghost",
+                chosenClass: "sortable-chosen",
                 onEnd: async function (evt) {
-                  // This event fires when an item is dropped
                   const newOrder = [];
-                  // Iterate through the children of the galleryContainer to get the new order
                   Array.from(galleryContainer.children).forEach(
                     (card, index) => {
                       if (card.dataset && card.dataset.id) {
-                        // Ensure it's a painting card
                         newOrder.push({
                           _id: card.dataset.id,
                           order: index, // Assign new order based on current position (0-based)
@@ -262,7 +365,7 @@
                     const updateResponse = await fetch(
                       "http://localhost:3000/painting/reorder",
                       {
-                        method: "PATCH", // Or PUT, depending on your REST preference for bulk update
+                        method: "PATCH",
                         headers: {
                           "Content-Type": "application/json",
                         },
@@ -276,9 +379,8 @@
                         "Order updated successfully!",
                         "success"
                       );
-                      // Re-fetch to display updated order numbers, or manually update
-                      // For simplicity, let's re-fetch the entire list.
-                      fetchAndDisplayPaintings(); // Re-render with confirmed new orders
+                      // Re-fetch to display updated order numbers and refresh the sortable instance
+                      fetchAndDisplayPaintings(currentCategory); // Re-render for the current category
                     } else {
                       const errorData = await updateResponse.json();
                       displayMessage(
@@ -289,7 +391,7 @@
                         "error"
                       );
                       // If update fails, re-fetch original state to avoid inconsistency
-                      fetchAndDisplayPaintings();
+                      fetchAndDisplayPaintings(currentCategory);
                     }
                   } catch (error) {
                     console.error("Error sending reorder update:", error);
@@ -298,7 +400,7 @@
                       "Network error during reorder update. Please check server.",
                       "error"
                     );
-                    fetchAndDisplayPaintings(); // Re-fetch on network error
+                    fetchAndDisplayPaintings(currentCategory); // Re-fetch on network error
                   }
                 },
               });
@@ -317,7 +419,12 @@
         }
       }
 
-      document.addEventListener("DOMContentLoaded", fetchAndDisplayPaintings);
+      // Initialize by fetching categories and then displaying default (all) paintings
+      document.addEventListener("DOMContentLoaded", async () => {
+        await fetchCategories();
+        await fetchAndDisplayPaintings(); // Initially display all paintings
+        updateActiveCategoryButton(null); // Set "All Categories" as active
+      });
     </script>
   </body>
 </html>

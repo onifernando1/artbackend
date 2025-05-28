@@ -1,8 +1,10 @@
+// server/app.js
+
 const express = require("express");
 require("dotenv").config();
 const app = express();
 const mongoose = require("mongoose");
-const path = require("path"); // Import the path module
+const path = require("path");
 const PORT = process.env.PORT || 3000;
 const cloudinary = require("cloudinary").v2;
 
@@ -10,20 +12,22 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true, // Use HTTPS URLs
+  secure: true,
 });
 
-app.use(express.json());
+app.use(express.json()); // Essential for parsing JSON request bodies
 
+// --- Import Routes ---
 const paintingRoute = require("../routes/paintings");
-const uploadRoute = require("../routes/upload");
+const authRoute = require("../routes/auth"); // NEW: Import auth routes
 
+// --- Mount Routes ---
 app.use("/painting", paintingRoute);
-app.use("/upload", uploadRoute);
+app.use("/api/auth", authRoute); // NEW: Mount auth routes under /api/auth
 
 app.use(express.static(path.join(__dirname, "..", "public")));
 
-//Connect to DB
+// Connect to DB
 mongoose
   .connect(process.env.MONG_URI)
   .then(() => {
@@ -34,3 +38,5 @@ mongoose
   .catch((error) => {
     console.error(error);
   });
+
+("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4Mzc4Y2IwYTU4YzFmYWNhM2M3ODY4YSIsImlhdCI6MTc0ODQ3MDk2MCwiZXhwIjoxNzQ4NDc0NTYwfQ.6FWKIxXbDlyqWZfeOzm-p-g244aFZDg0igVvvIICu-Q");

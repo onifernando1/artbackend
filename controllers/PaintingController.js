@@ -46,7 +46,16 @@ exports.createPainting = async (req, res) => {
 
 exports.getAllPaintings = async (req, res) => {
   try {
-    const paintings = await Painting.find();
+    const query = {}; // Start with an empty query object
+
+    // Check if a category query parameter is provided
+    if (req.query.category) {
+      query.category = req.query.category; // Add category filter to the query
+    }
+
+    // Find paintings based on the query and sort them by the 'order' field
+    const paintings = await Painting.find(query).sort({ order: 1 }); // Sort by order ascending
+
     res.status(200).json(paintings);
   } catch (err) {
     res.status(500).json({ message: err.message });
