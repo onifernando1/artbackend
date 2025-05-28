@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const paintingController = require("../controllers/PaintingController");
+const paintingController = require("../controllers/paintingController");
 
 // --- Define Routes ---
 

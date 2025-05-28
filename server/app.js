@@ -4,7 +4,7 @@ const app = express();
 const mongoose = require("mongoose");
 const PORT = process.env.PORT || 3000;
 
-const paintingRoute = require("../routes/painting");
+const paintingRoute = require("../routes/paintings");
 
 app.use("/painting", paintingRoute);
 

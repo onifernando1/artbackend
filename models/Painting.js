@@ -43,3 +43,5 @@ const paintingSchema = new mongoose.Schema({
     // },
   },
 });
+
+module.exports = mongoose.model("Painting", paintingSchema);
