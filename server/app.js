@@ -1,16 +1,23 @@
 const express = require("express");
+require("dotenv").config();
 const app = express();
+const mongoose = require("mongoose");
 const PORT = process.env.PORT || 3000;
 
-app.get("/api", (req, res) => {
-  res.json({ message: "Hello from server!" });
-});
-
 const paintingRoute = require("../routes/Painting");
+
 app.use("/painting", paintingRoute);
 
 app.get("/", (req, res) => res.send("Hello, world!"));
 
-app.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
-});
+//Connect to DB
+mongoose
+  .connect(process.env.MONG_URI)
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server listening on ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error(error);
+  });
