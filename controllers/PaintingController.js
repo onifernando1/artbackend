@@ -1,5 +1,29 @@
 const Painting = require("../models/Painting");
 
+async function getPaintingMiddleware(req, res, next) {
+  let painting;
+  try {
+    painting = await Painting.findById(req.params.id);
+    if (painting == null) {
+      return res.status(404).json({ message: "Painting not found" });
+    }
+  } catch (err) {
+    console.error("Error in getPaintingMiddleware:", err);
+
+    if (err.name === "CastError") {
+      return res.status(400).json({ message: "Invalid Painting ID format" });
+    }
+    return res
+      .status(500)
+      .json({ message: "An internal server error occurred." });
+  }
+
+  req.painting = painting;
+  next();
+}
+
+exports.getPaintingMiddleware = getPaintingMiddleware;
+
 exports.postPainting = async (req, res) => {
   console.log("Received request body:", req.body); // ADD THIS LINE TEMPORARILY
 
@@ -30,11 +54,7 @@ exports.getAllPaintings = async (req, res) => {
 };
 
 exports.getPaintingById = (req, res) => {
-  const id = req.params.id; // Get the ID from the URL parameter
-  console.log(`GET request received for /painting/getOne/${id}`);
-  res.status(200).json({
-    message: `Get by ID API - Painting with ID ${id} retrieved (placeholder)`,
-  });
+  res.status(200).json(req.painting);
 };
 
 exports.updatePaintingById = (req, res) => {

@@ -1,8 +1,8 @@
-GET http://localhost:3000/painting/
+GET http://localhost:3000/painting/6837342c4567eb1567b9952c
 
 ###
 
-POST http://localhost:3000/painting
+POST http://localhost:3000/painting/
 Content-Type: application/json  
 
 {
@@ -14,3 +14,4 @@ Content-Type: application/json
     "order": 1000,
     "imageUrl": "https://example.com/images/serene_garden.jpg"
 }
+

@@ -12,7 +12,11 @@ router.post("/", paintingController.postPainting);
 router.get("/", paintingController.getAllPaintings);
 
 // Get by ID Method (e.g., GET /painting/getOne/123)
-router.get("/:id", paintingController.getPaintingById);
+router.get(
+  "/:id",
+  paintingController.getPaintingMiddleware,
+  paintingController.getPaintingById
+);
 
 // Update by ID Method (e.g., PATCH /painting/update/123)
 router.patch("/:id", paintingController.updatePaintingById);
