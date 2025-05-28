@@ -57,12 +57,49 @@ exports.getPaintingById = (req, res) => {
   res.status(200).json(req.painting);
 };
 
-exports.updatePaintingById = (req, res) => {
-  const id = req.params.id; // Get the ID from the URL parameter
-  console.log(`PATCH request received for /painting/update/${id}`);
-  res.status(200).json({
-    message: `Update by ID API - Painting with ID ${id} updated (placeholder)`,
-  });
+exports.updatePaintingById = async (req, res) => {
+  const { name, category, medium, size, colour, order, imageUrl } = req.body;
+
+  if (name != null) {
+    req.painting.name = name;
+  }
+  if (category != null) {
+    req.painting.category = category;
+  }
+  if (medium != null) {
+    req.painting.medium = medium;
+  }
+  if (size != null) {
+    req.painting.size = size;
+  }
+  if (colour != null) {
+    req.painting.colour = colour;
+  }
+  if (order != null) {
+    req.painting.order = order;
+  }
+  if (imageUrl != null) {
+    req.painting.imageUrl = imageUrl;
+  }
+
+  try {
+    const updatedPainting = await req.painting.save();
+    res.status(200).json(updatedPainting);
+  } catch (err) {
+    console.error("Error updating painting:", err);
+
+    if (err.name === "ValidationError") {
+      const errors = {};
+      for (let field in err.errors) {
+        errors[field] = err.errors[field].message;
+      }
+      return res.status(400).json({ message: "Validation failed", errors });
+    }
+
+    res.status(500).json({
+      message: "An internal server error occurred while updating the painting.",
+    });
+  }
 };
 
 exports.deletePaintingById = async (req, res) => {
