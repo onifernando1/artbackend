@@ -1,10 +1,23 @@
 const Painting = require("../models/Painting");
 
-exports.postPainting = (req, res) => {
-  console.log("POST request received for /painting/post");
-  res
-    .status(201)
-    .json({ message: "Post API - Painting created (placeholder)" });
+exports.postPainting = async (req, res) => {
+  console.log("Received request body:", req.body); // ADD THIS LINE TEMPORARILY
+
+  const painting = new Painting({
+    name: req.body.name,
+    category: req.body.category,
+    medium: req.body.medium,
+    size: req.body.size,
+    colour: req.body.colour,
+    order: req.body.order,
+    imageUrl: req.body.imageUrl,
+  });
+  try {
+    const newPainting = await painting.save();
+    res.status(201).json(newPainting);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
 };
 
 exports.getAllPaintings = async (req, res) => {
