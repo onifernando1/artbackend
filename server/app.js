@@ -15,6 +15,7 @@ cloudinary.config({
 app.use(express.json());
 
 const paintingRoute = require("../routes/paintings");
+const uploadRoute = require("../routes/upload");
 
 app.use("/painting", paintingRoute);
 
