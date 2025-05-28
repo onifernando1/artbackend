@@ -33,6 +33,7 @@ exports.postPainting = async (req, res) => {
     colour: req.body.colour,
     order: req.body.order,
     imageUrl: req.body.imageUrl,
+    publicId: req.body.publicId,
   });
   try {
     const newPainting = await painting.save();
@@ -56,8 +57,59 @@ exports.getPaintingById = (req, res) => {
 };
 
 exports.updatePaintingById = async (req, res) => {
-  const { name, category, medium, size, colour, order, imageUrl } = req.body;
+  const { name, category, medium, size, colour, order, imageUrl, publicId } =
+    req.body;
 
+  // IMPORTANT: Handle image update and old image deletion
+  // If a new imageUrl (and typically publicId) is provided in the request body,
+  // it means the client wants to replace the image.
+  if (
+    imageUrl != null &&
+    publicId != null &&
+    req.painting.imageUrl !== imageUrl
+  ) {
+    // A new image URL and publicId were sent, and it's different from the current one.
+    // This implies the client has uploaded a new image to Cloudinary and is providing its details.
+
+    // 1. Delete the OLD image from Cloudinary (if one existed)
+    if (req.painting.publicId) {
+      try {
+        await cloudinary.uploader.destroy(req.painting.publicId);
+        console.log(`Old Cloudinary image deleted: ${req.painting.publicId}`);
+      } catch (destroyErr) {
+        console.error(
+          `Failed to delete old Cloudinary image ${req.painting.publicId}:`,
+          destroyErr
+        );
+        // Decide how critical this is:
+        // If you want the update to fail if old image deletion fails: throw destroyErr;
+        // Otherwise (recommended for robustness): just log and proceed.
+      }
+    }
+
+    // 2. Update the painting document with the NEW image details
+    req.painting.imageUrl = imageUrl;
+    req.painting.publicId = publicId;
+  } else if (imageUrl != null && req.painting.imageUrl !== imageUrl) {
+    // Edge case: imageUrl provided but no publicId. This shouldn't happen if client uses your /upload/image endpoint correctly.
+    // You might want to log a warning or return an error here.
+    console.warn(
+      "New imageUrl provided without publicId in update. Image deletion might be skipped."
+    );
+    req.painting.imageUrl = imageUrl;
+  } else if (
+    publicId != null &&
+    req.painting.publicId !== publicId &&
+    imageUrl == null
+  ) {
+    // Edge case: publicId provided but no imageUrl. This usually doesn't make sense for updates if they are paired.
+    console.warn(
+      "New publicId provided without imageUrl in update. This might be an issue."
+    );
+    req.painting.publicId = publicId;
+  }
+
+  // --- Update other painting fields (your existing logic) ---
   if (name != null) {
     req.painting.name = name;
   }
@@ -76,10 +128,8 @@ exports.updatePaintingById = async (req, res) => {
   if (order != null) {
     req.painting.order = order;
   }
-  if (imageUrl != null) {
-    req.painting.imageUrl = imageUrl;
-  }
 
+  // --- Save the updated painting ---
   try {
     const updatedPainting = await req.painting.save();
     res.status(200).json(updatedPainting);
