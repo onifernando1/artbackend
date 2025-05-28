@@ -19,9 +19,17 @@ router.get(
 );
 
 // Update by ID Method (e.g., PATCH /painting/update/123)
-router.patch("/:id", paintingController.updatePaintingById);
+router.patch(
+  "/:id",
+  paintingController.getPaintingMiddleware,
+  paintingController.updatePaintingById
+);
 
 // Delete by ID Method (e.g., DELETE /painting/delete/123)
-router.delete("/:id", paintingController.deletePaintingById);
+router.delete(
+  "/:id",
+  paintingController.getPaintingMiddleware,
+  paintingController.deletePaintingById
+);
 
 module.exports = router;

@@ -1,4 +1,4 @@
-GET http://localhost:3000/painting/6837342c4567eb1567b9952c
+GET http://localhost:3000/painting/
 
 ###
 
@@ -15,3 +15,11 @@ Content-Type: application/json
     "imageUrl": "https://example.com/images/serene_garden.jpg"
 }
 
+###
+
+GET http://localhost:3000/painting/6837342c4567eb1567b9952c
+
+###
+
+
+DELETE http://localhost:3000/painting/6837342c4567eb1567b9952c

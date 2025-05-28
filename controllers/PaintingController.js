@@ -65,10 +65,15 @@ exports.updatePaintingById = (req, res) => {
   });
 };
 
-exports.deletePaintingById = (req, res) => {
-  const id = req.params.id; // Get the ID from the URL parameter
-  console.log(`DELETE request received for /painting/delete/${id}`);
-  res.status(200).json({
-    message: `Delete by ID API - Painting with ID ${id} deleted (placeholder)`,
-  });
+exports.deletePaintingById = async (req, res) => {
+  try {
+    await req.painting.deleteOne();
+
+    res.status(200).json({ message: "Painting deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting painting:", err);
+    res.status(500).json({
+      message: "An internal server error occurred while deleting the painting.",
+    });
+  }
 };
