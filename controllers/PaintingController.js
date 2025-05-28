@@ -25,8 +25,6 @@ async function getPaintingMiddleware(req, res, next) {
 exports.getPaintingMiddleware = getPaintingMiddleware;
 
 exports.postPainting = async (req, res) => {
-  console.log("Received request body:", req.body); // ADD THIS LINE TEMPORARILY
-
   const painting = new Painting({
     name: req.body.name,
     category: req.body.category,
@@ -47,7 +45,7 @@ exports.postPainting = async (req, res) => {
 exports.getAllPaintings = async (req, res) => {
   try {
     const paintings = await Painting.find();
-    res.json(paintings);
+    res.status(200).json(paintings);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
