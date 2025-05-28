@@ -3,9 +3,7 @@ const router = express.Router();
 
 const controller = require("../controllers/PaintingController");
 
-router.post("/", (req, res) => {
-  res.send("You just create a painting");
-});
+router.post("/", controller.post);
 
 router.get("/", controller.get);
 
