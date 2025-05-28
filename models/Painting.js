@@ -32,15 +32,15 @@ const paintingSchema = new mongoose.Schema({
   },
   imageUrl: {
     type: String,
-    required: [true, "Image URL is required"], // The URL from your cloud storage (e.g., Cloudinary, AWS S3)
+    required: [true, "Image URL is required"],
     trim: true,
-    // validate: {
-    //   validator: function (v) {
-    //     // Basic URL validation (you might want a more robust regex for production)
-    //     return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(v);
-    //   },
-    //   message: (props) => `${props.value} is not a valid URL!`,
-    // },
+    // ... (validation) ...
+  },
+  publicId: {
+    // Add this field
+    type: String,
+    // Not required if a painting might not have an image initially, but recommended if it always will
+    // required: [true, 'Cloudinary Public ID is required']
   },
 });
 
