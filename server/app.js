@@ -2,6 +2,7 @@ const express = require("express");
 require("dotenv").config();
 const app = express();
 const mongoose = require("mongoose");
+const path = require("path"); // Import the path module
 const PORT = process.env.PORT || 3000;
 const cloudinary = require("cloudinary").v2;
 
@@ -18,8 +19,9 @@ const paintingRoute = require("../routes/paintings");
 const uploadRoute = require("../routes/upload");
 
 app.use("/painting", paintingRoute);
+app.use("/upload", uploadRoute);
 
-app.get("/", (req, res) => res.send("Hello, world!"));
+app.use(express.static(path.join(__dirname, "..", "public")));
 
 //Connect to DB
 mongoose
