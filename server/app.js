@@ -3,6 +3,7 @@ require("dotenv").config();
 const app = express();
 const mongoose = require("mongoose");
 const PORT = process.env.PORT || 3000;
+const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
