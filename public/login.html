@@ -128,7 +128,8 @@
 
         try {
           const response = await fetch(
-            "https://your-backend-api-domain.vercel.app/api/auth/login",
+            // --- FIX IS ON THIS LINE ---
+            "/api/auth/login", // Changed to a relative path
             {
               method: "POST",
               headers: {
