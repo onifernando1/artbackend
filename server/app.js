@@ -7,7 +7,8 @@ const mongoose = require("mongoose");
 const path = require("path");
 const PORT = process.env.PORT || 3000;
 const cloudinary = require("cloudinary").v2;
-const cors = require("cors"); // Import the cors middleware
+const cors = require("cors");
+const multer = require("multer"); // <--- NEW: Import multer
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -18,25 +19,68 @@ cloudinary.config({
 
 app.use(
   cors({
-    origin: "http://localhost:9000", // <--- THIS IS THE KEY!
-    // This tells the backend to allow requests
-    // from your React app running on port 9000.
-    methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed HTTP methods
-    credentials: true, // Allow sending of cookies/authentication headers (if applicable)
+    origin: "http://localhost:9000",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   })
 );
 
-app.use(express.json()); // Essential for parsing JSON request bodies
+// --- Multer Setup ---
+// Configure multer to store files in memory.
+// This is good for direct uploads to services like Cloudinary,
+// as the file isn't saved to your server's disk first.
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // Optional: Limit file size to 5MB (adjust as needed)
+  },
+  fileFilter: (req, file, cb) => {
+    // Optional: Filter file types to allow only images
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed!"), false);
+    }
+  },
+});
+// --- End Multer Setup ---
+
+// Express JSON body parser. Keep this for other JSON requests.
+// IMPORTANT: This should generally come BEFORE your routes,
+// but for routes handling 'multipart/form-data', Multer will handle the body.
+app.use(express.json());
+app.use(express.urlencoded({ extended: false })); // For URL-encoded form data
 
 // --- Import Routes ---
 const paintingRoute = require("../routes/paintings");
-const authRoute = require("../routes/auth"); // NEW: Import auth routes
+const authRoute = require("../routes/auth");
 
 // --- Mount Routes ---
-app.use("/painting", paintingRoute);
-app.use("/api/auth", authRoute); // NEW: Mount auth routes under /api/auth
+// Apply `upload.single('image')` middleware ONLY to the route that handles image uploads.
+// The string 'image' MUST match the 'name' attribute of your file input on the frontend.
+// Ensure it's placed BEFORE your paintingController.createPainting
+app.post("/painting", upload.single("image"), paintingRoute); // <-- NEW: Apply multer here
+app.use("/painting", paintingRoute); // <-- This should be for other painting routes (GET, PUT, DELETE)
+// If you have a separate file for 'paintingRoute' that defines POST
+// then ensure the POST is specifically handled with multer there.
+// It's more common to apply multer directly to the route that needs it,
+// as shown on the line above this comment.
+
+app.use("/api/auth", authRoute);
 
 app.use(express.static(path.join(__dirname, "..", "public")));
+
+// --- Global Error Handling Middleware (Good Practice) ---
+app.use((err, req, res, next) => {
+  console.error(err.stack); // Log the stack trace for debugging
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Something went wrong!";
+  res.status(statusCode).json({
+    status: "error",
+    message: message,
+  });
+});
+// --- End Global Error Handling Middleware ---
 
 // Connect to DB
 mongoose
@@ -49,5 +93,3 @@ mongoose
   .catch((error) => {
     console.error(error);
   });
-
-("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4Mzc4Y2IwYTU4YzFmYWNhM2M3ODY4YSIsImlhdCI6MTc0ODQ3MDk2MCwiZXhwIjoxNzQ4NDc0NTYwfQ.6FWKIxXbDlyqWZfeOzm-p-g244aFZDg0igVvvIICu-Q");

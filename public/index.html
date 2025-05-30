@@ -32,6 +32,8 @@
         margin-bottom: 20px;
         padding-bottom: 10px;
         border-bottom: 1px solid #eee;
+        flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        gap: 15px; /* Space out items if they wrap */
       }
       .top-bar .welcome-message {
         font-size: 1.1em;
@@ -42,6 +44,7 @@
         display: flex;
         gap: 15px;
         align-items: center;
+        flex-wrap: wrap; /* Allow controls to wrap */
       }
       .auth-controls .logout-btn {
         background-color: #dc3545;
@@ -61,6 +64,7 @@
         color: #007bff;
         font-size: 1.1em;
         transition: color 0.2s;
+        white-space: nowrap; /* Keep "View Gallery" on one line */
       }
       .auth-controls .gallery-link:hover {
         text-decoration: underline;
@@ -81,7 +85,6 @@
       .form-group input[type="url"],
       .form-group select,
       .form-group input[type="file"] {
-        /* Added file input styling */
         width: calc(100% - 22px);
         padding: 12px;
         border: 1px solid #ced4da;
@@ -89,12 +92,16 @@
         font-size: 1em;
         box-sizing: border-box;
       }
+      /* Ensure file input doesn't look too wide on its own */
+      .form-group input[type="file"] {
+        width: auto; /* Reset width for file input */
+        padding: 6px; /* Adjust padding for file input button */
+      }
       .form-group input[type="text"]:focus,
       .form-group input[type="number"]:focus,
       .form-group input[type="url"]:focus,
       .form-group select:focus,
       .form-group input[type="file"]:focus {
-        /* Added file input styling */
         border-color: #007bff;
         outline: none;
         box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
@@ -122,6 +129,7 @@
         font-size: 1.1em;
         font-weight: bold;
         display: none; /* Hidden by default */
+        word-wrap: break-word; /* Prevent overflow for long messages */
       }
       .message.loading {
         background-color: #e0f7fa;
@@ -137,16 +145,35 @@
         color: #155724;
         border: 1px solid #c3e6cb;
       }
+
+      /* Responsive adjustments for smaller screens */
+      @media (max-width: 600px) {
+        .top-bar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .top-bar h1 {
+          width: 100%; /* Make heading take full width */
+          text-align: center;
+          margin-bottom: 10px;
+        }
+        .top-bar .auth-controls {
+          width: 100%;
+          justify-content: center; /* Center controls when wrapped */
+        }
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="top-bar">
-        <h1 style="margin: 0">Add New Painting</h1>
+        <h1>Add New Painting</h1>
         <div class="auth-controls">
           <span class="welcome-message" id="welcomeMessage"></span>
           <a href="gallery.html" class="gallery-link">← View Gallery</a>
-          <button class="logout-btn" id="logoutBtn">Logout</button>
+          <button type="button" class="logout-btn" id="logoutBtn">
+            Logout
+          </button>
         </div>
       </div>
 
@@ -173,7 +200,14 @@
         </div>
         <div class="form-group">
           <label for="order">Order (Number):</label>
-          <input type="number" id="order" name="order" required />
+          <input
+            type="number"
+            id="order"
+            name="order"
+            required
+            min="0"
+            step="1"
+          />
         </div>
         <div class="form-group">
           <label for="imageFile">Upload Image:</label>
@@ -191,11 +225,14 @@
     </div>
 
     <script>
+      // Configuration for your backend API base URL
+      const API_BASE_URL = "http://localhost:3000";
+
       const addPaintingForm = document.getElementById("addPaintingForm");
       const messageDiv = document.getElementById("message");
       const logoutBtn = document.getElementById("logoutBtn");
       const welcomeMessage = document.getElementById("welcomeMessage");
-      const imageFileInput = document.getElementById("imageFile"); // Get the file input
+      const imageFileInput = document.getElementById("imageFile");
 
       // --- Authentication Check ---
       const token = localStorage.getItem("jwtToken");
@@ -222,7 +259,8 @@
         messageDiv.textContent = msg;
         messageDiv.className = `message ${type}`;
         messageDiv.style.display = "block";
-        if (duration) {
+        if (duration !== 0) {
+          // Only set timeout if duration is not 0 (for indefinite messages)
           setTimeout(() => {
             messageDiv.style.display = "none";
             messageDiv.textContent = "";
@@ -237,7 +275,19 @@
           Authorization: `Bearer ${token}`, // Add JWT to Authorization header
         };
 
-        const response = await fetch(url, { ...options, headers });
+        let response;
+        try {
+          response = await fetch(url, { ...options, headers });
+        } catch (networkError) {
+          // Catch network-related errors (e.g., server not running, no internet)
+          console.error("Network error during fetch:", networkError);
+          displayMessage(
+            "Network error: Could not connect to the server. Is the backend running?",
+            "error",
+            0
+          );
+          throw new Error("Network Error"); // Propagate a specific error
+        }
 
         // If token is invalid or expired, backend returns 401. Redirect to login.
         if (response.status === 401 || response.status === 403) {
@@ -259,51 +309,53 @@
       addPaintingForm.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        const imageFile = imageFileInput.files[0]; // Get the selected file
+        const imageFile = imageFileInput.files[0];
 
         if (!imageFile) {
           displayMessage("Please select an image file.", "error");
           return;
         }
 
-        displayMessage("Uploading image and adding painting...", "loading", 0); // Display loading message indefinitely
+        displayMessage("Uploading image and adding painting...", "loading", 0);
 
         try {
-          // 1. Prepare data for backend (including the file)
-          // Use FormData to send file and other text data
           const formData = new FormData();
           formData.append("name", addPaintingForm.name.value);
           formData.append("category", addPaintingForm.category.value);
           formData.append("medium", addPaintingForm.medium.value);
           formData.append("size", addPaintingForm.size.value);
           formData.append("colour", addPaintingForm.colour.value);
-          formData.append("order", parseInt(addPaintingForm.order.value));
-          formData.append("image", imageFile); // Append the actual file
+          formData.append("order", parseInt(addPaintingForm.order.value, 10)); // Radix 10 for parseInt
+          formData.append("image", imageFile);
 
-          // 2. Send the FormData to your backend
-          // The backend will then handle the Cloudinary upload
           const response = await authorizedFetch(
-            "http://localhost:3000/painting", // Your backend endpoint
+            `${API_BASE_URL}/painting`, // Use the API_BASE_URL constant
             {
               method: "POST",
-              // No 'Content-Type' header needed for FormData; browser sets it automatically
               body: formData,
             }
           );
 
-          const data = await response.json();
-
+          // Only attempt to parse JSON if the response is OK
           if (response.ok) {
+            const data = await response.json(); // Parse JSON for success message
             displayMessage("Painting added successfully!", "success");
-            addPaintingForm.reset(); // Clear the form after successful submission
+            addPaintingForm.reset();
           } else {
-            displayMessage(data.message || "Failed to add painting.", "error");
+            // For non-OK responses, try to parse JSON to get error message from backend
+            const errorData = await response.json();
+            displayMessage(
+              errorData.message ||
+                `Failed to add painting. Status: ${response.status}`,
+              "error"
+            );
           }
         } catch (error) {
+          // Only show generic network/backend error if it's not the "Unauthorized" error
           if (error.message !== "Unauthorized") {
             console.error("Error adding painting:", error);
             displayMessage(
-              "Network error or backend issue. Could not add painting.",
+              "An unexpected error occurred. Please try again.",
               "error"
             );
           }
