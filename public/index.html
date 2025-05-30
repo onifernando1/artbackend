@@ -326,7 +326,7 @@
           formData.append("size", addPaintingForm.size.value);
           formData.append("colour", addPaintingForm.colour.value);
           formData.append("order", parseInt(addPaintingForm.order.value, 10)); // Radix 10 for parseInt
-          formData.append("image", imageFile);
+          formData.append("imageFile", imageFile);
 
           const response = await authorizedFetch(
             `${API_BASE_URL}/painting`, // Use the API_BASE_URL constant
