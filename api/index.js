@@ -189,9 +189,10 @@ const paintingRoutes = require("./routes/paintings");
 const authRoutes = require("./routes/auth");
 
 // --- Mount Routes ---
-app.post("/painting", upload.single("imageFile"), paintingRoutes);
-app.use("/painting", paintingRoutes);
-app.use("/api/auth", authRoutes);
+// FIX: Add /api prefix to match how Vercel routes traffic
+app.post("/api/painting", upload.single("imageFile"), paintingRoutes);
+app.use("/api/painting", paintingRoutes);
+app.use("/api/auth", authRoutes); // This one was already correct
 
 // --- Root Route for Vercel Health Check / Basic Test ---
 app.get("/", (req, res) => {
