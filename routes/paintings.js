@@ -6,7 +6,10 @@ const path = require("path"); // <--- ADD THIS LINE
 // Fix the path to paintingController using path.join and __dirname
 // __dirname refers to the directory of the current file (routes/paintings.js)
 // We go up one level (..) from 'routes' and then into 'controllers'
-const paintingController = require("../controllers/paintingController");
+const paintingController = require(path.join(
+  __dirname,
+  "../controllers/paintingController"
+)); // <--- THIS IS THE CRUCIAL CHANGE
 
 const { protect } = require("../middleware/authMiddleware"); // Path should be correct as it's a sibling directory
 
