@@ -24,5 +24,4 @@
     { "source": "/admin/(.*)", "destination": "/admin-panel/$1" },
     { "source": "/(.*)", "destination": "/client/build/$1" }
   ]
-  // The 'routes' array has been removed
 }
