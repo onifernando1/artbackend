@@ -299,7 +299,7 @@
         try {
           // Fetch ALL paintings first to get unique categories
           // Note: GET /painting does NOT require authentication by your routes setup, so no 'authorizedFetch' needed here.
-          const response = await fetch("http://localhost:3000/painting");
+          const response = await fetch("/api/painting");
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
@@ -379,7 +379,7 @@
         }
 
         try {
-          let url = "http://localhost:3000/painting";
+          let url = "/api/painting";
           if (category) {
             url += `?category=${encodeURIComponent(category)}`;
           }
@@ -456,7 +456,7 @@
                   try {
                     // Use authorizedFetch for protected reorder endpoint
                     const updateResponse = await authorizedFetch(
-                      "http://localhost:3000/painting/reorder",
+                      "/api/painting/reorder",
                       {
                         method: "PATCH",
                         headers: {
