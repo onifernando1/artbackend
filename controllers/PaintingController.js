@@ -171,11 +171,9 @@ exports.updatePaintingById = async (req, res, next) => {
           "Cloudinary re-upload response missing secure_url:",
           cloudinaryResponse
         );
-        return res
-          .status(500)
-          .json({
-            message: "New image upload succeeded, but no URL was returned.",
-          });
+        return res.status(500).json({
+          message: "New image upload succeeded, but no URL was returned.",
+        });
       }
 
       // 3. Update painting document with NEW image details
