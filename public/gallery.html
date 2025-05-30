@@ -25,6 +25,37 @@
         color: #007bff;
         margin-bottom: 30px;
       }
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+      }
+      .top-bar .welcome-message {
+        font-size: 1.1em;
+        color: #555;
+        font-weight: bold;
+      }
+      .top-bar .auth-controls {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+      }
+      .auth-controls .logout-btn {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: background-color 0.2s;
+      }
+      .auth-controls .logout-btn:hover {
+        background-color: #c82333;
+      }
       .category-nav {
         text-align: center;
         margin-bottom: 25px;
@@ -157,8 +188,18 @@
   </head>
   <body>
     <div class="container">
-      <h1>Our Painting Gallery (Drag & Drop to Reorder!)</h1>
-      <a href="index.html" class="back-to-home">← Add New Painting</a>
+      <div class="top-bar">
+        <h1 style="margin: 0">
+          Our Painting Gallery (Drag & Drop to Reorder!)
+        </h1>
+        <div class="auth-controls">
+          <span class="welcome-message" id="welcomeMessage"></span>
+          <a href="index.html" class="back-to-home" style="margin: 0"
+            >← Add New Painting</a
+          >
+          <button class="logout-btn" id="logoutBtn">Logout</button>
+        </div>
+      </div>
 
       <div id="categoryNav" class="category-nav"></div>
 
@@ -182,18 +223,40 @@
 
     <script>
       const galleryContainer = document.getElementById("galleryContainer");
-      const categoryNav = document.getElementById("categoryNav"); // New element for category navigation
+      const categoryNav = document.getElementById("categoryNav");
       const loadingMessage = document.getElementById("loadingMessage");
       const errorMessage = document.getElementById("errorMessage");
       const noPaintingsMessage = document.getElementById("noPaintingsMessage");
       const reorderMessage = document.getElementById("reorderMessage");
+      const logoutBtn = document.getElementById("logoutBtn"); // Logout button
+      const welcomeMessage = document.getElementById("welcomeMessage"); // Welcome message
 
       let sortableInstance = null;
       let currentCategory = null; // Track the currently selected category
 
+      // --- Authentication Check ---
+      const token = localStorage.getItem("jwtToken");
+      const username = localStorage.getItem("username");
+
+      if (!token) {
+        // No token found, redirect to login page
+        window.location.href = "login.html";
+      } else {
+        if (username) {
+          welcomeMessage.textContent = `Welcome, ${username}!`;
+        }
+      }
+
+      // --- Logout Functionality ---
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("jwtToken"); // Remove token
+        localStorage.removeItem("username"); // Remove username
+        window.location.href = "login.html"; // Redirect to login
+      });
+
       // Helper function to display messages
-      function displayMessage(element, message, type, duration = 3000) {
-        element.textContent = message;
+      function displayMessage(element, msg, type, duration = 3000) {
+        element.textContent = msg;
         element.className = `message ${type}`;
         element.style.display = "block";
 
@@ -205,9 +268,37 @@
         }
       }
 
+      // --- Fetch Utilities with Authorization Header ---
+      async function authorizedFetch(url, options = {}) {
+        const headers = {
+          ...options.headers,
+          Authorization: `Bearer ${token}`, // Add JWT to Authorization header
+        };
+
+        const response = await fetch(url, { ...options, headers });
+
+        // If token is invalid or expired, backend returns 401. Redirect to login.
+        if (response.status === 401 || response.status === 403) {
+          displayMessage(
+            errorMessage,
+            "Session expired or not authorized. Please log in again.",
+            "error",
+            0
+          );
+          localStorage.removeItem("jwtToken");
+          localStorage.removeItem("username");
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 1500);
+          throw new Error("Unauthorized"); // Throw to stop further processing
+        }
+        return response;
+      }
+
       async function fetchCategories() {
         try {
           // Fetch ALL paintings first to get unique categories
+          // Note: GET /painting does NOT require authentication by your routes setup, so no 'authorizedFetch' needed here.
           const response = await fetch("http://localhost:3000/painting");
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -216,7 +307,7 @@
 
           // Extract unique categories
           const categories = new Set(allPaintings.map((p) => p.category));
-          const uniqueCategories = Array.from(categories).sort(); // Sort categories alphabetically
+          const uniqueCategories = Array.from(categories).sort();
 
           renderCategoryNav(uniqueCategories);
         } catch (error) {
@@ -226,7 +317,7 @@
             `Error loading categories: ${error.message}`,
             "error",
             0
-          ); // Display indefinitely
+          );
         }
       }
 
@@ -279,10 +370,9 @@
         loadingMessage.style.display = "block";
         errorMessage.style.display = "none";
         noPaintingsMessage.style.display = "none";
-        reorderMessage.style.display = "none"; // Clear reorder message on new fetch
+        reorderMessage.style.display = "none";
         galleryContainer.innerHTML = ""; // Clear previous content
 
-        // Destroy existing Sortable instance if it exists to prevent re-initialization issues
         if (sortableInstance) {
           sortableInstance.destroy();
           sortableInstance = null;
@@ -291,13 +381,16 @@
         try {
           let url = "http://localhost:3000/painting";
           if (category) {
-            url += `?category=${encodeURIComponent(category)}`; // Add category query parameter
+            url += `?category=${encodeURIComponent(category)}`;
           }
 
+          // This initial fetch for all paintings/categories does not require auth,
+          // but any subsequent calls that modify data will.
+          // For fetching, plain fetch is fine as GET /painting is unprotected.
           const response = await fetch(url);
           const paintings = await response.json();
 
-          loadingMessage.style.display = "none"; // Hide loading message
+          loadingMessage.style.display = "none";
 
           if (response.ok) {
             if (paintings.length === 0) {
@@ -306,12 +399,11 @@
                 ? `No paintings found in the "${category}" category.`
                 : `No paintings found yet. Be the first to add one!`;
             } else {
-              // Paintings are already sorted by 'order' from the backend
               paintings.forEach((painting) => {
                 const paintingCard = document.createElement("div");
                 paintingCard.className = "painting-card";
-                paintingCard.dataset.id = painting._id; // Store the painting ID
-                paintingCard.dataset.order = painting.order; // Store the current order for debugging/reference
+                paintingCard.dataset.id = painting._id;
+                paintingCard.dataset.order = painting.order;
 
                 paintingCard.innerHTML = `
                                 <img src="${
@@ -353,7 +445,7 @@
                       if (card.dataset && card.dataset.id) {
                         newOrder.push({
                           _id: card.dataset.id,
-                          order: index, // Assign new order based on current position (0-based)
+                          order: index,
                         });
                       }
                     }
@@ -362,7 +454,8 @@
                   console.log("New order to send:", newOrder);
 
                   try {
-                    const updateResponse = await fetch(
+                    // Use authorizedFetch for protected reorder endpoint
+                    const updateResponse = await authorizedFetch(
                       "http://localhost:3000/painting/reorder",
                       {
                         method: "PATCH",
@@ -379,8 +472,7 @@
                         "Order updated successfully!",
                         "success"
                       );
-                      // Re-fetch to display updated order numbers and refresh the sortable instance
-                      fetchAndDisplayPaintings(currentCategory); // Re-render for the current category
+                      fetchAndDisplayPaintings(currentCategory);
                     } else {
                       const errorData = await updateResponse.json();
                       displayMessage(
@@ -390,17 +482,19 @@
                         }`,
                         "error"
                       );
-                      // If update fails, re-fetch original state to avoid inconsistency
                       fetchAndDisplayPaintings(currentCategory);
                     }
                   } catch (error) {
-                    console.error("Error sending reorder update:", error);
-                    displayMessage(
-                      reorderMessage,
-                      "Network error during reorder update. Please check server.",
-                      "error"
-                    );
-                    fetchAndDisplayPaintings(currentCategory); // Re-fetch on network error
+                    // authorizedFetch might throw 'Unauthorized' so catch it here
+                    if (error.message !== "Unauthorized") {
+                      console.error("Error sending reorder update:", error);
+                      displayMessage(
+                        reorderMessage,
+                        "Network error during reorder update. Please check server.",
+                        "error"
+                      );
+                      fetchAndDisplayPaintings(currentCategory);
+                    }
                   }
                 },
               });
@@ -412,18 +506,23 @@
             }`;
           }
         } catch (error) {
-          loadingMessage.style.display = "none";
-          errorMessage.style.display = "block";
-          errorMessage.textContent = `Network error: Could not connect to the server. (${error.message})`;
-          console.error("Error fetching paintings:", error);
+          if (error.message !== "Unauthorized") {
+            loadingMessage.style.display = "none";
+            errorMessage.style.display = "block";
+            errorMessage.textContent = `Network error: Could not connect to the server. (${error.message})`;
+            console.error("Error fetching paintings:", error);
+          }
         }
       }
 
       // Initialize by fetching categories and then displaying default (all) paintings
       document.addEventListener("DOMContentLoaded", async () => {
-        await fetchCategories();
-        await fetchAndDisplayPaintings(); // Initially display all paintings
-        updateActiveCategoryButton(null); // Set "All Categories" as active
+        // Only proceed if a token exists
+        if (token) {
+          await fetchCategories();
+          await fetchAndDisplayPaintings();
+          updateActiveCategoryButton(null);
+        }
       });
     </script>
   </body>

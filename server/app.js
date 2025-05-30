@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const path = require("path");
 const PORT = process.env.PORT || 3000;
 const cloudinary = require("cloudinary").v2;
+const cors = require("cors"); // Import the cors middleware
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -14,6 +15,16 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
   secure: true,
 });
+
+app.use(
+  cors({
+    origin: "http://localhost:9000", // <--- THIS IS THE KEY!
+    // This tells the backend to allow requests
+    // from your React app running on port 9000.
+    methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed HTTP methods
+    credentials: true, // Allow sending of cookies/authentication headers (if applicable)
+  })
+);
 
 app.use(express.json()); // Essential for parsing JSON request bodies
 

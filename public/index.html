@@ -9,292 +9,306 @@
         font-family: sans-serif;
         margin: 20px;
         background-color: #f4f4f4;
+        color: #333;
       }
       .container {
-        background-color: #fff;
+        max-width: 800px;
+        margin: 30px auto;
         padding: 30px;
+        background-color: #fff;
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        max-width: 600px;
-        margin: 30px auto;
       }
       h1 {
         text-align: center;
-        color: #333;
+        color: #007bff;
+        margin-bottom: 30px;
       }
-      label {
+
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+      }
+      .top-bar .welcome-message {
+        font-size: 1.1em;
+        color: #555;
+        font-weight: bold;
+      }
+      .top-bar .auth-controls {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+      }
+      .auth-controls .logout-btn {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: background-color 0.2s;
+      }
+      .auth-controls .logout-btn:hover {
+        background-color: #c82333;
+      }
+      .auth-controls .gallery-link {
+        text-decoration: none;
+        color: #007bff;
+        font-size: 1.1em;
+        transition: color 0.2s;
+      }
+      .auth-controls .gallery-link:hover {
+        text-decoration: underline;
+        color: #0056b3;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+      .form-group label {
         display: block;
         margin-bottom: 8px;
         font-weight: bold;
         color: #555;
       }
-      input[type="text"],
-      input[type="number"],
-      input[type="url"],
-      input[type="file"] {
-        width: calc(100% - 20px);
-        padding: 10px;
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
+      .form-group input[type="text"],
+      .form-group input[type="number"],
+      .form-group input[type="url"],
+      .form-group select,
+      .form-group input[type="file"] {
+        /* Added file input styling */
+        width: calc(100% - 22px);
+        padding: 12px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        font-size: 1em;
+        box-sizing: border-box;
       }
-      button {
-        background-color: #007bff;
+      .form-group input[type="text"]:focus,
+      .form-group input[type="number"]:focus,
+      .form-group input[type="url"]:focus,
+      .form-group select:focus,
+      .form-group input[type="file"]:focus {
+        /* Added file input styling */
+        border-color: #007bff;
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      }
+      .btn {
+        background-color: #28a745;
         color: white;
-        padding: 12px 20px;
+        padding: 14px 25px;
         border: none;
-        border-radius: 4px;
+        border-radius: 6px;
         cursor: pointer;
-        font-size: 16px;
-        margin-right: 10px;
+        font-size: 1.1em;
+        transition: background-color 0.3s ease;
+        width: 100%;
+        margin-top: 15px;
       }
-      button:hover {
-        background-color: #0056b3;
-      }
-      button:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
+      .btn:hover {
+        background-color: #218838;
       }
       .message {
         margin-top: 20px;
-        padding: 10px;
-        border-radius: 4px;
+        padding: 15px;
+        border-radius: 8px;
         text-align: center;
+        font-size: 1.1em;
+        font-weight: bold;
+        display: none; /* Hidden by default */
       }
-      .message.success {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
+      .message.loading {
+        background-color: #e0f7fa;
+        color: #00796b;
       }
       .message.error {
         background-color: #f8d7da;
         color: #721c24;
         border: 1px solid #f5c6cb;
       }
-      .loading {
-        text-align: center;
-        margin-top: 10px;
-        font-style: italic;
-        color: #888;
+      .message.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>Add New Painting</h1>
-
-      <form id="paintingForm">
-        <label for="name">Painting Name:</label>
-        <input type="text" id="name" name="name" required /><br />
-
-        <label for="category">Category:</label>
-        <input type="text" id="category" name="category" required /><br />
-
-        <label for="medium">Medium:</label>
-        <input type="text" id="medium" name="medium" required /><br />
-
-        <label for="size">Size:</label>
-        <input type="text" id="size" name="size" required /><br />
-
-        <label for="colour">Colour:</label>
-        <input type="text" id="colour" name="colour" /><br />
-
-        <label for="order">Order (Number):</label>
-        <input type="number" id="order" name="order" required /><br />
-
-        <label for="imageFile">Image File:</label>
-        <input type="file" id="imageFile" accept="image/*" /><br />
-        <button type="button" id="uploadImageBtn">Upload Image</button>
-        <div id="uploadStatus" class="message"></div>
-        <div id="loadingUpload" class="loading" style="display: none">
-          Uploading image...
+      <div class="top-bar">
+        <h1 style="margin: 0">Add New Painting</h1>
+        <div class="auth-controls">
+          <span class="welcome-message" id="welcomeMessage"></span>
+          <a href="gallery.html" class="gallery-link">← View Gallery</a>
+          <button class="logout-btn" id="logoutBtn">Logout</button>
         </div>
+      </div>
 
-        <input type="hidden" id="imageUrl" name="imageUrl" />
-        <input type="hidden" id="publicId" name="publicId" />
-
-        <br />
-        <button type="submit" id="submitPaintingBtn">Create Painting</button>
-        <div id="formMessage" class="message"></div>
-        <div id="loadingSubmit" class="loading" style="display: none">
-          Submitting painting...
+      <form id="addPaintingForm">
+        <div class="form-group">
+          <label for="name">Painting Name:</label>
+          <input type="text" id="name" name="name" required />
         </div>
+        <div class="form-group">
+          <label for="category">Category:</label>
+          <input type="text" id="category" name="category" required />
+        </div>
+        <div class="form-group">
+          <label for="medium">Medium:</label>
+          <input type="text" id="medium" name="medium" required />
+        </div>
+        <div class="form-group">
+          <label for="size">Size:</label>
+          <input type="text" id="size" name="size" required />
+        </div>
+        <div class="form-group">
+          <label for="colour">Colour (Optional):</label>
+          <input type="text" id="colour" name="colour" />
+        </div>
+        <div class="form-group">
+          <label for="order">Order (Number):</label>
+          <input type="number" id="order" name="order" required />
+        </div>
+        <div class="form-group">
+          <label for="imageFile">Upload Image:</label>
+          <input
+            type="file"
+            id="imageFile"
+            name="imageFile"
+            accept="image/*"
+            required
+          />
+        </div>
+        <button type="submit" class="btn">Add Painting</button>
       </form>
+      <div id="message" class="message"></div>
     </div>
 
     <script>
-      const paintingForm = document.getElementById("paintingForm");
-      const imageFile = document.getElementById("imageFile");
-      const uploadImageBtn = document.getElementById("uploadImageBtn");
-      const submitPaintingBtn = document.getElementById("submitPaintingBtn");
-      const imageUrlInput = document.getElementById("imageUrl");
-      const publicIdInput = document.getElementById("publicId");
-      const uploadStatusDiv = document.getElementById("uploadStatus");
-      const formMessageDiv = document.getElementById("formMessage");
-      const loadingUploadDiv = document.getElementById("loadingUpload");
-      const loadingSubmitDiv = document.getElementById("loadingSubmit");
+      const addPaintingForm = document.getElementById("addPaintingForm");
+      const messageDiv = document.getElementById("message");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const welcomeMessage = document.getElementById("welcomeMessage");
+      const imageFileInput = document.getElementById("imageFile"); // Get the file input
 
-      let isImageUploaded = false; // Track image upload status
+      // --- Authentication Check ---
+      const token = localStorage.getItem("jwtToken");
+      const username = localStorage.getItem("username");
 
-      // --- Image Upload Logic ---
-      uploadImageBtn.addEventListener("click", async () => {
-        const file = imageFile.files[0];
-        if (!file) {
-          displayMessage(
-            uploadStatusDiv,
-            "Please select an image file first.",
-            "error"
-          );
-          return;
+      if (!token) {
+        // No token found, redirect to login page
+        window.location.href = "login.html";
+      } else {
+        if (username) {
+          welcomeMessage.textContent = `Welcome, ${username}!`;
         }
+      }
 
-        const formData = new FormData();
-        formData.append("image", file); // 'image' must match the 'upload.single('image')' in your routes/upload.js
-
-        uploadImageBtn.disabled = true;
-        submitPaintingBtn.disabled = true; // Disable main submit button too
-        loadingUploadDiv.style.display = "block";
-        displayMessage(uploadStatusDiv, "", ""); // Clear previous messages
-
-        try {
-          const response = await fetch("http://localhost:3000/upload/image", {
-            method: "POST",
-            body: formData,
-          });
-
-          const data = await response.json();
-
-          if (response.ok) {
-            imageUrlInput.value = data.imageUrl;
-            publicIdInput.value = data.publicId;
-            isImageUploaded = true;
-            displayMessage(
-              uploadStatusDiv,
-              "Image uploaded successfully!",
-              "success"
-            );
-          } else {
-            displayMessage(
-              uploadStatusDiv,
-              `Image upload failed: ${data.message || "Unknown error"}`,
-              "error"
-            );
-            isImageUploaded = false;
-            imageUrlInput.value = "";
-            publicIdInput.value = "";
-          }
-        } catch (error) {
-          console.error("Network or server error during image upload:", error);
-          displayMessage(
-            uploadStatusDiv,
-            "Network error during image upload. Please try again.",
-            "error"
-          );
-          isImageUploaded = false;
-          imageUrlInput.value = "";
-          publicIdInput.value = "";
-        } finally {
-          uploadImageBtn.disabled = false;
-          submitPaintingBtn.disabled = false; // Re-enable main submit button
-          loadingUploadDiv.style.display = "none";
-        }
-      });
-
-      // --- Painting Form Submission Logic ---
-      paintingForm.addEventListener("submit", async (event) => {
-        event.preventDefault(); // Prevent default form submission
-
-        if (!isImageUploaded) {
-          displayMessage(
-            formMessageDiv,
-            "Please upload the image first.",
-            "error"
-          );
-          return;
-        }
-        if (!imageUrlInput.value || !publicIdInput.value) {
-          displayMessage(
-            formMessageDiv,
-            "Image details are missing after upload. Please re-upload image.",
-            "error"
-          );
-          return;
-        }
-
-        submitPaintingBtn.disabled = true; // Disable submit button
-        loadingSubmitDiv.style.display = "block";
-        displayMessage(formMessageDiv, "", ""); // Clear previous messages
-
-        const paintingData = {
-          name: document.getElementById("name").value,
-          category: document.getElementById("category").value,
-          medium: document.getElementById("medium").value,
-          size: document.getElementById("size").value,
-          colour: document.getElementById("colour").value,
-          order: parseInt(document.getElementById("order").value, 10), // Ensure order is a number
-          imageUrl: imageUrlInput.value,
-          publicId: publicIdInput.value,
-        };
-
-        try {
-          const response = await fetch("http://localhost:3000/painting", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(paintingData),
-          });
-
-          const data = await response.json();
-
-          if (response.ok) {
-            displayMessage(
-              formMessageDiv,
-              "Painting added successfully!",
-              "success"
-            );
-            paintingForm.reset(); // Clear the form
-            imageUrlInput.value = ""; // Clear hidden fields
-            publicIdInput.value = "";
-            isImageUploaded = false; // Reset image upload status
-            displayMessage(uploadStatusDiv, "", ""); // Clear image upload message
-          } else {
-            // Display specific validation errors if available
-            if (data.errors) {
-              let errorMessage = "Validation failed:<br>";
-              for (const field in data.errors) {
-                errorMessage += `- ${data.errors[field]}<br>`;
-              }
-              displayMessage(formMessageDiv, errorMessage, "error");
-            } else {
-              displayMessage(
-                formMessageDiv,
-                `Failed to add painting: ${data.message || "Unknown error"}`,
-                "error"
-              );
-            }
-          }
-        } catch (error) {
-          console.error(
-            "Network or server error during painting submission:",
-            error
-          );
-          displayMessage(
-            formMessageDiv,
-            "Network error. Please check server and try again.",
-            "error"
-          );
-        } finally {
-          submitPaintingBtn.disabled = false; // Re-enable submit button
-          loadingSubmitDiv.style.display = "none";
-        }
+      // --- Logout Functionality ---
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("jwtToken"); // Remove token
+        localStorage.removeItem("username"); // Remove username
+        window.location.href = "login.html"; // Redirect to login
       });
 
       // Helper function to display messages
-      function displayMessage(element, message, type) {
-        element.innerHTML = message;
-        element.className = `message ${type}`;
+      function displayMessage(msg, type, duration = 3000) {
+        messageDiv.textContent = msg;
+        messageDiv.className = `message ${type}`;
+        messageDiv.style.display = "block";
+        if (duration) {
+          setTimeout(() => {
+            messageDiv.style.display = "none";
+            messageDiv.textContent = "";
+          }, duration);
+        }
       }
+
+      // --- Fetch Utilities with Authorization Header ---
+      async function authorizedFetch(url, options = {}) {
+        const headers = {
+          ...options.headers,
+          Authorization: `Bearer ${token}`, // Add JWT to Authorization header
+        };
+
+        const response = await fetch(url, { ...options, headers });
+
+        // If token is invalid or expired, backend returns 401. Redirect to login.
+        if (response.status === 401 || response.status === 403) {
+          displayMessage(
+            "Session expired or not authorized. Please log in again.",
+            "error",
+            0
+          );
+          localStorage.removeItem("jwtToken");
+          localStorage.removeItem("username");
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 1500);
+          throw new Error("Unauthorized"); // Throw to stop further processing
+        }
+        return response;
+      }
+
+      addPaintingForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const imageFile = imageFileInput.files[0]; // Get the selected file
+
+        if (!imageFile) {
+          displayMessage("Please select an image file.", "error");
+          return;
+        }
+
+        displayMessage("Uploading image and adding painting...", "loading", 0); // Display loading message indefinitely
+
+        try {
+          // 1. Prepare data for backend (including the file)
+          // Use FormData to send file and other text data
+          const formData = new FormData();
+          formData.append("name", addPaintingForm.name.value);
+          formData.append("category", addPaintingForm.category.value);
+          formData.append("medium", addPaintingForm.medium.value);
+          formData.append("size", addPaintingForm.size.value);
+          formData.append("colour", addPaintingForm.colour.value);
+          formData.append("order", parseInt(addPaintingForm.order.value));
+          formData.append("image", imageFile); // Append the actual file
+
+          // 2. Send the FormData to your backend
+          // The backend will then handle the Cloudinary upload
+          const response = await authorizedFetch(
+            "http://localhost:3000/painting", // Your backend endpoint
+            {
+              method: "POST",
+              // No 'Content-Type' header needed for FormData; browser sets it automatically
+              body: formData,
+            }
+          );
+
+          const data = await response.json();
+
+          if (response.ok) {
+            displayMessage("Painting added successfully!", "success");
+            addPaintingForm.reset(); // Clear the form after successful submission
+          } else {
+            displayMessage(data.message || "Failed to add painting.", "error");
+          }
+        } catch (error) {
+          if (error.message !== "Unauthorized") {
+            console.error("Error adding painting:", error);
+            displayMessage(
+              "Network error or backend issue. Could not add painting.",
+              "error"
+            );
+          }
+        }
+      });
     </script>
   </body>
 </html>
