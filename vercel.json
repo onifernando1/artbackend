@@ -5,28 +5,16 @@
       "src": "api/index.js",
       "use": "@vercel/node"
     }
-    // Vercel automatically detects and serves static files.
-    // You don't usually need a 'build' entry specifically for them unless complex.
   ],
   "routes": [
-    // 1. IMPORTANT: API routes must come FIRST.
-    // This ensures requests to your backend (e.g., yourdomain.vercel.app/api/paintings)
-    // are handled by your Node.js function and not by static file serving.
     {
       "src": "/api/(.*)",
       "dest": "/api/index.js"
     },
-    // 2. Serve static files from the 'public' directory.
-    // This rule matches any request that includes a file extension (e.g., .html, .css, .js, .png).
-    // It directs these requests to the corresponding file within your 'public/' folder.
     {
       "src": "/(.+\\..+)",
       "dest": "/public/$1"
     },
-    // 3. Fallback route for the root and any other paths without extensions.
-    // This is typically used for Single Page Applications (SPAs) where your frontend routing
-    // handles paths like '/about' or '/dashboard'. It directs all such requests to index.html.
-    // If you don't have an SPA, this just ensures your root URL serves index.html.
     {
       "src": "/(.*)",
       "dest": "/public/index.html"
