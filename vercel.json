@@ -1,27 +1,28 @@
 {
-  "version": 2,
   "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "outputDirectory": "build"
+      }
+    },
     {
       "src": "api/index.js",
       "use": "@vercel/node"
     },
     {
-      "src": "public/**/*",
-      "use": "@vercel/static"
+      "src": "admin-panel/index.html",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "admin-panel"
+      }
     }
   ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/(.+\\..+)",
-      "dest": "/public/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/index.html"
-    }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/admin/(.*)", "destination": "/admin-panel/$1" },
+    { "source": "/(.*)", "destination": "/client/build/$1" }
   ]
+  // The 'routes' array has been removed
 }
