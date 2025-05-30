@@ -6,8 +6,8 @@
       "use": "@vercel/node"
     },
     {
-      "src": "public/**/*", // This tells Vercel to include all files in the 'public' directory
-      "use": "@vercel/static" // This specifies the static file builder
+      "src": "public/**/*",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
