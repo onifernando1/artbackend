@@ -14,6 +14,41 @@ const multer = require("multer");
 
 const app = express();
 
+// Add these imports at the top, along with other 'require' statements
+const fs = require("fs");
+const util = require("util");
+
+// Add these utility functions somewhere in your api/index.js,
+// for example, just before the first app.get() or app.use()
+const readDir = util.promisify(fs.readdir);
+const stat = util.promisify(fs.stat);
+
+async function listDirectory(dirPath, indent = "") {
+  try {
+    const files = await readDir(dirPath);
+    for (const file of files) {
+      const filePath = path.join(dirPath, file); // Make sure 'path' is imported at the top
+      const fileStat = await stat(filePath);
+      if (fileStat.isDirectory()) {
+        console.log(`${indent}├── ${file}/`);
+        await listDirectory(filePath, indent + "│   ");
+      } else {
+        console.log(`${indent}├── ${file}`);
+      }
+    }
+  } catch (e) {
+    console.error(`${indent}Error listing ${dirPath}:`, e.message);
+  }
+}
+
+// Add this temporary endpoint, perhaps right after your other app.get('/') route
+app.get("/debug-files", async (req, res) => {
+  console.log("--- Listing /var/task/ contents ---");
+  await listDirectory("/var/task/"); // This will list the contents of the deployed function's root
+  console.log("--- Finished listing /var/task/ contents ---");
+  res.status(200).send("Check Vercel logs for directory listing.");
+});
+
 // --- Cloudinary Configuration ---
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
