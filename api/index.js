@@ -112,7 +112,9 @@ mongoose
   .connect(process.env.MONG_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
+    // serverSelectionTimeoutMS: 5000, // <--- REMOVE OR INCREASE THIS LINE!
+    // If you want to keep it, set it much higher, e.g., 15000 or 20000:
+    // serverSelectionTimeoutMS: 15000,
     socketTimeoutMS: 45000,
   })
   .then(() => {
