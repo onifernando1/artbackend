@@ -1,4 +1,4 @@
-// api/index.js (This file will be deployed to Vercel)
+// index.js
 
 // Ensure dotenv is loaded very early for local development
 if (process.env.NODE_ENV !== "production") {
@@ -10,139 +10,12 @@ const mongoose = require("mongoose");
 const path = require("path");
 const cloudinary = require("cloudinary").v2;
 const cors = require("cors");
-const multer = require("multer");
+const multer = require("multer"); // <--- This is correctly present, but the setup is missing!
 
 const app = express();
 
-// --- START: MODIFIED DEBUGGING CODE ---
-const fs = require("fs");
-const util = require("util");
-
-const readDir = util.promisify(fs.readdir);
-const readFile = util.promisify(fs.readFile); // <-- NEW: Promisified readFile
-const stat = util.promisify(fs.stat);
-
-async function listDirectory(dirPath, indent = "") {
-  try {
-    const files = await readDir(dirPath);
-    for (const file of files) {
-      const filePath = path.join(dirPath, file);
-      let fileStat;
-      try {
-        fileStat = await stat(filePath);
-      } catch (statError) {
-        // If stat fails (e.g., symlink issues or permissions), just log and skip
-        console.warn(
-          `${indent}├── ${file} (Error stat-ing: ${statError.message})`
-        );
-        continue;
-      }
-
-      if (fileStat.isDirectory()) {
-        console.log(`${indent}├── ${file}/`);
-        // Limit recursion depth slightly to avoid excessively long logs on large dirs
-        if (indent.length < 8) {
-          // Max 2-3 levels deep for this debug
-          await listDirectory(filePath, indent + "│   ");
-        } else {
-          console.log(`${indent}│   └── (Max depth reached for ${file})`);
-        }
-      } else {
-        console.log(`${indent}├── ${file}`);
-      }
-    }
-  } catch (e) {
-    console.error(
-      `${indent}CRITICAL ERROR: Failed to read directory ${dirPath}:`,
-      e.message
-    );
-    console.error(e.stack);
-  }
-}
-
-async function performStartupDebug() {
-  console.log("--- Vercel Serverless Function Cold Start Debug ---");
-  console.log("Current working directory (process.cwd()):", process.cwd());
-  console.log("Directory of this file (__dirname):", __dirname);
-
-  console.log("--- Attempting to list /var/task/ contents (Function Root) ---");
-  await listDirectory("/var/task/"); // This call should show us files if they exist
-  console.log("--- Finished listing /var/task/ contents ---");
-
-  console.log("--- Attempting to list /var/task/api/ contents ---");
-  await listDirectory("/var/task/api/"); // This call should show us files if they exist inside api
-  console.log("--- Finished listing /var/task/api/ contents ---");
-
-  // --- READ AND PRINT FILE CONTENTS ---
-  console.log("--- Reading api/index.js content (first 500 chars) ---");
-  try {
-    // __dirname is /var/task/api, so 'index.js' is correct relative path
-    const indexPath = path.join(__dirname, "index.js");
-    const indexContent = await readFile(indexPath, "utf8");
-    console.log(
-      "api/index.js content:",
-      indexContent.substring(0, Math.min(indexContent.length, 500)) +
-        (indexContent.length > 500 ? "..." : "")
-    );
-    if (indexContent.includes("../routes/paintings")) {
-      console.warn(
-        "WARNING: api/index.js content contains the old path '../routes/paintings'!"
-      );
-    } else {
-      console.log(
-        "CONFIRMED: api/index.js content uses correct relative path (e.g., './routes/paintings')."
-      );
-    }
-  } catch (e) {
-    console.error("ERROR reading api/index.js content:", e.message);
-    console.error(e.stack);
-  }
-
-  console.log("--- Reading routes/paintings.js content (first 500 chars) ---");
-  try {
-    // Assuming routes/paintings.js is at /var/task/api/routes/paintings.js
-    const paintingsPath = path.join(__dirname, "routes/paintings.js");
-    const paintingsContent = await readFile(paintingsPath, "utf8");
-    console.log(
-      "routes/paintings.js content:",
-      paintingsContent.substring(0, Math.min(paintingsContent.length, 500)) +
-        (paintingsContent.length > 500 ? "..." : "")
-    );
-  } catch (e) {
-    console.error("ERROR reading routes/paintings.js content:", e.message);
-    console.error(e.stack);
-  }
-  // --- END READ AND PRINT FILE CONTENTS ---
-
-  console.log(
-    "--- Attempting direct require of paintingController from api/index.js ---"
-  );
-  try {
-    // This require might still cause a crash if the file isn't there or has issues
-    // Path here should be relative to api/index.js as if in /var/task/api/
-    const testController = require("./controllers/paintingController");
-    console.log("Direct require of paintingController SUCCESS!");
-    console.log(
-      "Keys available on testController:",
-      Object.keys(testController)
-    );
-  } catch (e) {
-    console.error(
-      "Direct require of paintingController FAILED (from api/index.js):",
-      e.message
-    );
-    console.error(e.stack);
-  }
-  console.log("--- End of Direct require test ---");
-
-  console.log("--- End Vercel Serverless Function Cold Start Debug ---");
-}
-
-// Call the debug function IMMEDIATELY when the serverless function starts
-// This will run BEFORE any other application setup or route imports
-performStartupDebug();
-
-// --- END: ADDED DEBUGGING CODE ---
+// --- Add this line here to see where __dirname points ---
+console.log("__dirname is:", __dirname);
 
 // --- Cloudinary Configuration ---
 cloudinary.config({
@@ -161,7 +34,7 @@ app.use(
   })
 );
 
-// --- Multer Setup ---
+// --- Multer Setup --- <--- THIS WHOLE BLOCK WAS MISSING
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -181,33 +54,56 @@ const upload = multer({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// --- Serve Static Files (Crucial for your HTML, CSS, JS) ---
+app.use(express.static(path.join(__dirname, "public")));
+// --- Add this line to see what path static is serving from ---
+console.log("Express static serving from:", path.join(__dirname, "public"));
+
 // --- Import Routes ---
-// The crash usually happens here
-// TEMPORARILY COMMENT THESE OUT IF THE DEBUG LOGS ARE STILL CUTTING OFF
-// We need to ensure the debug code runs fully.
 const paintingRoutes = require("./routes/paintings");
 const authRoutes = require("./routes/auth");
 
-// --- Mount Routes ---
-// FIX: Add /api prefix to match how Vercel routes traffic
+// --- Mount API Routes ---
+// Line 44 (approx) that was causing the error now has 'upload' defined
 app.post("/api/painting", upload.single("imageFile"), paintingRoutes);
 app.use("/api/painting", paintingRoutes);
-app.use("/api/auth", authRoutes); // This one was already correct
+app.use("/api/auth", authRoutes);
 
-// --- Root Route for Vercel Health Check / Basic Test ---
+// --- Root Route for Initial Load ---
 app.get("/", (req, res) => {
-  res.status(200).send("Art Backend API is running!");
+  // --- Add this line to see the exact path res.sendFile is trying to use ---
+  const filePath = path.join(__dirname, "public", "index.html");
+  console.log("Attempting to send file from:", filePath);
+
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      // Log specific error if sendFile fails
+      console.error("Error sending file (sendFile callback):", err);
+      // Only send a 500 if the response hasn't already been sent by the global error handler
+      if (!res.headersSent) {
+        res.status(500).json({
+          status: "error",
+          message: `Failed to load index.html: ${err.message}`,
+        });
+      }
+    } else {
+      console.log("Successfully sent index.html");
+    }
+  });
 });
 
 // --- Global Error Handling Middleware ---
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error("Global Error Handler:", err.stack); // Added label
   const statusCode = err.statusCode || 500;
   const message = err.message || "Something went wrong!";
-  res.status(statusCode).json({
-    status: "error",
-    message: message,
-  });
+  if (!res.headersSent) {
+    // Prevent sending headers if already sent
+    res.status(statusCode).json({
+      status: "error",
+      message: message,
+    });
+  }
 });
 // --- End Global Error Handling Middleware ---
 
@@ -222,7 +118,7 @@ mongoose
   .then(() => {
     console.log("MongoDB connected successfully");
     if (process.env.NODE_ENV !== "production") {
-      const PORT = process.env.PORT || 5000;
+      const PORT = process.env.PORT || 3000;
       app.listen(PORT, () => {
         console.log(`Local server listening on ${PORT}`);
       });
