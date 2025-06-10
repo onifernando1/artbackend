@@ -106,18 +106,16 @@ app.use((err, req, res, next) => {
   }
 });
 // --- End Global Error Handling Middleware ---
+
 // --- Database Connection ---
 mongoose
   .connect(process.env.MONG_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    // --- IMPORTANT: UNCOMMENT AND SET THESE VALUES ---
-    serverSelectionTimeoutMS: 30000, // Wait 30 seconds to find a MongoDB server
-    connectTimeoutMS: 30000, // Wait 30 seconds for the initial connection handshake
-    socketTimeoutMS: 45000, // Wait 45 seconds for operations on an established connection
-    bufferCommands: false, // If connection isn't established, throw error immediately
-    // instead of buffering and timing out after 10 seconds.
-    // --- END IMPORTANT CHANGES ---
+    // serverSelectionTimeoutMS: 5000, // <--- REMOVE OR INCREASE THIS LINE!
+    // If you want to keep it, set it much higher, e.g., 15000 or 20000:
+    // serverSelectionTimeoutMS: 15000,
+    socketTimeoutMS: 45000,
   })
   .then(() => {
     console.log("MongoDB connected successfully");
@@ -130,9 +128,6 @@ mongoose
   })
   .catch((error) => {
     console.error("MongoDB connection error:", error);
-    // Add more detailed logging for the error object itself
-    console.error("MongoDB connection error details:", error.message);
-    console.error("MongoDB connection error stack:", error.stack);
   });
 
 // --- IMPORTANT: Export the Express app for Vercel ---
