@@ -3,151 +3,257 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Our Painting Gallery</title>
+    <title>Painting Gallery & Management</title>
+    <!-- SortableJS for drag-and-drop reordering -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <style>
+      /* General body and container styles */
       body {
-        font-family: sans-serif;
-        margin: 20px;
-        background-color: #f4f4f4;
+        font-family: "Inter", sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f0f2f5;
         color: #333;
+        line-height: 1.6;
       }
+
       .container {
         max-width: 1200px;
         margin: 30px auto;
-        padding: 20px;
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       }
-      h1 {
-        text-align: center;
-        color: #007bff;
-        margin-bottom: 30px;
-      }
+
+      /* Top bar with title, welcome message, and controls */
       .top-bar {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #eee;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e0e0e0;
+        flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        gap: 15px; /* Space out items if they wrap */
+      }
+      .top-bar h1 {
+        color: #007bff;
+        margin: 0;
+        font-size: 2.2em;
+        font-weight: 700;
       }
       .top-bar .welcome-message {
         font-size: 1.1em;
         color: #555;
-        font-weight: bold;
+        font-weight: 600;
+        white-space: nowrap; /* Keep message on one line */
       }
       .top-bar .auth-controls {
         display: flex;
         gap: 15px;
         align-items: center;
+        flex-wrap: wrap;
       }
+      /* Logout button */
       .auth-controls .logout-btn {
         background-color: #dc3545;
         color: white;
         border: none;
-        padding: 8px 15px;
-        border-radius: 5px;
+        padding: 10px 18px;
+        border-radius: 6px;
         cursor: pointer;
-        font-size: 0.9em;
-        transition: background-color 0.2s;
+        font-size: 0.95em;
+        font-weight: 500;
+        transition: background-color 0.25s ease, transform 0.1s ease;
       }
       .auth-controls .logout-btn:hover {
         background-color: #c82333;
+        transform: translateY(-1px);
       }
-      .category-nav {
-        text-align: center;
-        margin-bottom: 25px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #eee;
+      .auth-controls .logout-btn:active {
+        transform: translateY(0);
       }
-      .category-button {
-        background-color: #e9ecef;
-        color: #495057;
-        border: 1px solid #ced4da;
-        padding: 10px 18px;
-        margin: 0 8px 10px 8px;
-        border-radius: 20px;
-        cursor: pointer;
-        font-size: 1em;
-        transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-        white-space: nowrap; /* Prevent wrapping */
+      /* Add New Painting link */
+      .auth-controls .add-painting-link {
+        text-decoration: none;
+        color: #28a745;
+        font-size: 1.1em;
+        font-weight: 600;
+        transition: color 0.25s ease;
+        white-space: nowrap;
       }
-      .category-button:hover {
-        background-color: #dee2e6;
-      }
-      .category-button.active {
-        background-color: #007bff;
-        color: white;
-        border-color: #007bff;
-      }
-      .gallery-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 25px;
-        padding: 10px;
-        min-height: 200px; /* Give it some minimum height for better drag interaction */
-      }
-      @media (max-width: 900px) {
-        .gallery-grid {
-          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        }
-      }
-      @media (max-width: 600px) {
-        .gallery-grid {
-          grid-template-columns: 1fr;
-        }
+      .auth-controls .add-painting-link:hover {
+        text-decoration: underline;
+        color: #218838;
       }
 
+      /* Filter section */
+      .filter-section {
+        margin-bottom: 25px;
+        text-align: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #e0e0e0;
+      }
+      .filter-section label {
+        font-weight: bold;
+        margin-right: 10px;
+        color: #555;
+      }
+      .filter-buttons button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9em;
+        margin: 5px;
+        transition: background-color 0.25s ease, transform 0.1s ease;
+      }
+      .filter-buttons button:hover {
+        background-color: #0056b3;
+        transform: translateY(-1px);
+      }
+      .filter-buttons button.active {
+        background-color: #28a745; /* Active filter color */
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+      }
+      .filter-buttons button.active:hover {
+        background-color: #218838;
+      }
+
+      /* Paintings grid */
+      .paintings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 30px;
+        padding: 20px 0;
+      }
+
+      /* Individual painting card */
       .painting-card {
         background-color: #fff;
-        border: 1px solid #ddd;
-        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
         overflow: hidden;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s ease-in-out;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        cursor: grab;
+        text-decoration: none; /* Remove underline from card if it's a link */
+        color: inherit;
+        position: relative; /* For drag-and-drop indicators */
+        cursor: grab; /* Indicate draggable */
       }
       .painting-card:hover {
         transform: translateY(-5px);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
       }
+
+      /* Drag and drop visual feedback */
+      .painting-card.dragging {
+        opacity: 0.5;
+        border: 2px dashed #007bff;
+      }
+      .painting-card.drag-over-top::before,
+      .painting-card.drag-over-bottom::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background-color: #007bff;
+        z-index: 10;
+        border-radius: 3px;
+      }
+      .painting-card.drag-over-top::before {
+        top: 0;
+      }
+      .painting-card.drag-over-bottom::after {
+        bottom: 0;
+      }
+
       .painting-card img {
         width: 100%;
-        height: 250px;
-        object-fit: cover;
-        display: block;
+        height: 250px; /* Fixed height for consistency */
+        object-fit: cover; /* Cover the area, cropping if necessary */
         border-bottom: 1px solid #eee;
       }
+
       .painting-info {
         padding: 15px;
-        flex-grow: 1;
+        flex-grow: 1; /* Allows info to take available space */
         display: flex;
         flex-direction: column;
       }
-      .painting-info h2 {
-        font-size: 1.5em;
+      .painting-info h3 {
         margin-top: 0;
-        margin-bottom: 10px;
-        color: #0056b3;
+        margin-bottom: 8px;
+        color: #007bff;
+        font-size: 1.4em;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .painting-info p {
-        margin-bottom: 8px;
-        line-height: 1.4;
+        margin-bottom: 5px;
+        font-size: 0.95em;
+        color: #666;
       }
       .painting-info p strong {
-        color: #555;
+        color: #333;
       }
+
+      .painting-actions {
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 15px 15px;
+        border-top: 1px solid #eee;
+        gap: 10px;
+      }
+      .painting-actions button {
+        flex: 1; /* Distribute space evenly */
+        padding: 10px 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9em;
+        font-weight: 600;
+        transition: background-color 0.25s ease, transform 0.1s ease;
+      }
+      .painting-actions .edit-btn {
+        background-color: #ffc107;
+        color: #333;
+      }
+      .painting-actions .edit-btn:hover {
+        background-color: #e0a800;
+        transform: translateY(-1px);
+      }
+      .painting-actions .delete-btn {
+        background-color: #dc3545;
+        color: white;
+      }
+      .painting-actions .delete-btn:hover {
+        background-color: #c82333;
+        transform: translateY(-1px);
+      }
+      .painting-actions button:active {
+        transform: translateY(0);
+      }
+
+      /* Message display (loading, error, success) */
       .message {
-        margin-top: 20px;
-        padding: 15px;
-        border-radius: 8px;
+        margin-top: 25px;
+        padding: 18px;
+        border-radius: 10px;
         text-align: center;
-        font-size: 1.1em;
+        font-size: 1.15em;
         font-weight: bold;
+        display: none; /* Hidden by default */
+        word-wrap: break-word;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
       }
       .message.loading {
         background-color: #e0f7fa;
@@ -164,82 +270,198 @@
         border: 1px solid #c3e6cb;
       }
 
-      .back-to-home {
-        display: block;
-        text-align: center;
-        margin-top: 20px;
-        font-size: 1.1em;
-        color: #007bff;
-        text-decoration: none;
-        margin-bottom: 20px;
-      }
-      .back-to-home:hover {
-        text-decoration: underline;
+      /* Delete confirmation modal */
+      .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1000; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgba(0, 0, 0, 0.6); /* Black w/ opacity */
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
 
-      /* SortableJS ghost and chosen classes */
-      .sortable-ghost {
-        opacity: 0.2;
+      .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        width: 90%;
+        max-width: 400px;
+        text-align: center;
+        animation: fadeIn 0.3s ease-out;
       }
-      .sortable-chosen {
-        box-shadow: 0 0 0 2px #007bff;
+
+      .modal-content h3 {
+        margin-top: 0;
+        color: #333;
+        font-size: 1.5em;
+      }
+
+      .modal-content p {
+        margin-bottom: 25px;
+        color: #555;
+        font-size: 1.1em;
+      }
+
+      .modal-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+      }
+
+      .modal-buttons button {
+        padding: 12px 25px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1em;
+        font-weight: 600;
+        transition: background-color 0.25s ease, transform 0.1s ease;
+      }
+
+      .modal-buttons #confirmDeleteBtn {
+        background-color: #dc3545;
+        color: white;
+      }
+
+      .modal-buttons #confirmDeleteBtn:hover {
+        background-color: #c82333;
+        transform: translateY(-1px);
+      }
+
+      .modal-buttons #cancelDeleteBtn {
+        background-color: #6c757d;
+        color: white;
+      }
+
+      .modal-buttons #cancelDeleteBtn:hover {
+        background-color: #5a6268;
+        transform: translateY(-1px);
+      }
+      .modal-buttons button:active {
+        transform: translateY(0);
+      }
+
+      /* Animations */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Responsive adjustments for smaller screens */
+      @media (max-width: 768px) {
+        .top-bar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .top-bar h1 {
+          width: 100%;
+          text-align: center;
+          margin-bottom: 15px;
+        }
+        .top-bar .auth-controls {
+          width: 100%;
+          justify-content: center;
+        }
+        .paintings-grid {
+          grid-template-columns: 1fr; /* Single column layout */
+        }
+        .painting-card img {
+          height: 200px; /* Adjust image height for mobile */
+        }
       }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="top-bar">
-        <h1 style="margin: 0">
-          Our Painting Gallery (Drag & Drop to Reorder!)
-        </h1>
+        <h1>Painting Gallery</h1>
         <div class="auth-controls">
           <span class="welcome-message" id="welcomeMessage"></span>
-          <a href="index.html" class="back-to-home" style="margin: 0"
-            >← Add New Painting</a
+          <a href="add-painting.html" class="add-painting-link"
+            >+ Add New Painting</a
           >
-          <button class="logout-btn" id="logoutBtn">Logout</button>
+          <button type="button" class="logout-btn" id="logoutBtn">
+            Logout
+          </button>
         </div>
       </div>
 
-      <div id="categoryNav" class="category-nav"></div>
-
-      <div id="galleryContainer" class="gallery-grid">
-        <div id="loadingMessage" class="message loading">
-          Loading paintings...
+      <div class="filter-section">
+        <label for="categoryFilter">Filter by Category:</label>
+        <div class="filter-buttons" id="categoryFilter">
+          <button class="filter-btn active" data-category="all">All</button>
+          <!-- Categories will be dynamically added here by JS -->
         </div>
-        <div
-          id="errorMessage"
-          class="message error"
-          style="display: none"
-        ></div>
-        <div
+      </div>
+
+      <div id="message" class="message"></div>
+
+      <div class="paintings-grid" id="paintingsContainer">
+        <!-- Paintings will be loaded here by JavaScript -->
+        <p
           id="noPaintingsMessage"
-          class="message"
-          style="display: none"
-        ></div>
+          style="text-align: center; color: #777; display: none"
+        >
+          No paintings found. Try adding one!
+        </p>
       </div>
-      <div id="reorderMessage" class="message" style="display: none"></div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmationModal" class="modal">
+      <div class="modal-content">
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete this painting?</p>
+        <div class="modal-buttons">
+          <button id="confirmDeleteBtn">Delete</button>
+          <button id="cancelDeleteBtn">Cancel</button>
+        </div>
+      </div>
     </div>
 
     <script>
-      const galleryContainer = document.getElementById("galleryContainer");
-      const categoryNav = document.getElementById("categoryNav");
-      const loadingMessage = document.getElementById("loadingMessage");
-      const errorMessage = document.getElementById("errorMessage");
-      const noPaintingsMessage = document.getElementById("noPaintingsMessage");
-      const reorderMessage = document.getElementById("reorderMessage");
-      const logoutBtn = document.getElementById("logoutBtn"); // Logout button
-      const welcomeMessage = document.getElementById("welcomeMessage"); // Welcome message
+      // API base URL for your backend
+      const API_BASE_URL = "/api";
 
-      let sortableInstance = null;
-      let currentCategory = null; // Track the currently selected category
+      // DOM element references
+      const welcomeMessage = document.getElementById("welcomeMessage");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const paintingsContainer = document.getElementById("paintingsContainer");
+      const messageDiv = document.getElementById("message");
+      const categoryFilterContainer = document.getElementById("categoryFilter");
+      const noPaintingsMessage = document.getElementById("noPaintingsMessage");
+
+      // Modal elements
+      const deleteConfirmationModal = document.getElementById(
+        "deleteConfirmationModal"
+      );
+      const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+      const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+
+      let paintingToDeleteId = null; // Stores the ID of the painting to be deleted
+      let currentCategoryFilter = "all"; // Current filter category
+      let sortableInstance = null; // SortableJS instance
 
       // --- Authentication Check ---
       const token = localStorage.getItem("jwtToken");
       const username = localStorage.getItem("username");
 
+      // Redirect to login if no token is found
       if (!token) {
-        // No token found, redirect to login page
         window.location.href = "login.html";
       } else {
         if (username) {
@@ -249,38 +471,57 @@
 
       // --- Logout Functionality ---
       logoutBtn.addEventListener("click", () => {
-        localStorage.removeItem("jwtToken"); // Remove token
-        localStorage.removeItem("username"); // Remove username
-        window.location.href = "login.html"; // Redirect to login
+        localStorage.removeItem("jwtToken"); // Clear token
+        localStorage.removeItem("username"); // Clear username
+        window.location.href = "login.html"; // Redirect to login page
       });
 
-      // Helper function to display messages
-      function displayMessage(element, msg, type, duration = 3000) {
-        element.textContent = msg;
-        element.className = `message ${type}`;
-        element.style.display = "block";
-
-        if (duration) {
+      /**
+       * Helper function to display messages to the user.
+       * @param {string} msg - The message to display.
+       * @param {string} type - The type of message (e.g., 'loading', 'success', 'error').
+       * @param {number} [duration=3000] - How long the message should be visible in milliseconds (0 for indefinite).
+       */
+      function displayMessage(msg, type, duration = 3000) {
+        messageDiv.textContent = msg;
+        messageDiv.className = `message ${type}`;
+        messageDiv.style.display = "block";
+        if (duration !== 0) {
           setTimeout(() => {
-            element.style.display = "none";
-            element.textContent = "";
+            messageDiv.style.display = "none";
+            messageDiv.textContent = "";
           }, duration);
         }
       }
 
-      // --- Fetch Utilities with Authorization Header ---
+      /**
+       * A wrapper around fetch to include the Authorization header and handle common authentication errors.
+       * @param {string} url - The URL to fetch.
+       * @param {Object} options - Fetch options object.
+       * @returns {Promise<Response>} - The fetch API response.
+       * @throws {Error} - Throws an error if network issues or unauthorized access occur.
+       */
       async function authorizedFetch(url, options = {}) {
         const headers = {
           ...options.headers,
-          Authorization: `Bearer ${token}`, // Add JWT to Authorization header
+          Authorization: `Bearer ${token}`,
         };
 
-        const response = await fetch(url, { ...options, headers });
+        let response;
+        try {
+          response = await fetch(url, { ...options, headers });
+        } catch (networkError) {
+          console.error("Network error during fetch:", networkError);
+          displayMessage(
+            "Network error: Could not connect to the server. Is the backend running?",
+            "error",
+            0
+          );
+          throw new Error("Network Error");
+        }
 
-        // If token is invalid or expired, backend returns 401. Redirect to login.
         if (response.status === 401 || response.status === 403) {
           displayMessage(
-            errorMessage,
             "Session expired or not authorized. Please log in again.",
             "error",
             0
@@ -290,238 +531,304 @@
           setTimeout(() => {
             window.location.href = "login.html";
           }, 1500);
-          throw new Error("Unauthorized"); // Throw to stop further processing
+          throw new Error("Unauthorized");
         }
         return response;
       }
 
-      async function fetchCategories() {
-        try {
-          // Fetch ALL paintings first to get unique categories
-          // Note: GET /painting does NOT require authentication by your routes setup, so no 'authorizedFetch' needed here.
-          const response = await fetch("/api/painting");
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const allPaintings = await response.json();
+      /**
+       * Renders the painting cards into the DOM.
+       * @param {Array<Object>} paintings - An array of painting objects.
+       */
+      function renderPaintings(paintings) {
+        paintingsContainer.innerHTML = ""; // Clear existing paintings
 
-          // Extract unique categories
-          const categories = new Set(allPaintings.map((p) => p.category));
-          const uniqueCategories = Array.from(categories).sort();
-
-          renderCategoryNav(uniqueCategories);
-        } catch (error) {
-          console.error("Error fetching categories:", error);
-          displayMessage(
-            errorMessage,
-            `Error loading categories: ${error.message}`,
-            "error",
-            0
-          );
+        if (paintings.length === 0) {
+          noPaintingsMessage.style.display = "block";
+          return;
+        } else {
+          noPaintingsMessage.style.display = "none";
         }
-      }
 
-      function renderCategoryNav(categories) {
-        categoryNav.innerHTML = ""; // Clear previous buttons
+        // Sort paintings by their 'order' property before rendering
+        paintings.sort((a, b) => a.order - b.order);
 
-        // "All Categories" button
-        const allBtn = document.createElement("button");
-        allBtn.className =
-          "category-button" + (currentCategory === null ? " active" : "");
-        allBtn.textContent = "All Categories";
-        allBtn.addEventListener("click", () => {
-          currentCategory = null;
-          updateActiveCategoryButton(null);
-          fetchAndDisplayPaintings(); // Fetch all paintings
+        paintings.forEach((painting) => {
+          const card = document.createElement("div");
+          card.className = "painting-card";
+          card.draggable = true; // Make cards draggable for SortableJS
+          card.dataset.id = painting._id; // Store ID for drag-and-drop and actions
+          card.dataset.order = painting.order; // Store order for drag-and-drop
+
+          card.innerHTML = `
+            <img src="${
+              painting.imageUrl ||
+              "https://placehold.co/280x250/cccccc/333333?text=No+Image"
+            }" alt="${
+            painting.name || "Painting Image"
+          }" onerror="this.onerror=null;this.src='https://placehold.co/280x250/cccccc/333333?text=Image+Error';"/>
+            <div class="painting-info">
+              <h3>${painting.name}</h3>
+              <p><strong>Category:</strong> ${painting.category}</p>
+              <p><strong>Medium:</strong> ${painting.medium}</p>
+              <p><strong>Size:</strong> ${painting.size}</p>
+              ${
+                painting.colour
+                  ? `<p><strong>Colour:</strong> ${painting.colour}</p>`
+                  : ""
+              }
+              <p><strong>Order:</strong> ${painting.order}</p>
+            </div>
+            <div class="painting-actions">
+              <button class="edit-btn" data-id="${painting._id}">Edit</button>
+              <button class="delete-btn" data-id="${
+                painting._id
+              }">Delete</button>
+            </div>
+          `;
+
+          paintingsContainer.appendChild(card);
         });
-        categoryNav.appendChild(allBtn);
 
-        // Individual category buttons
-        categories.forEach((category) => {
-          const button = document.createElement("button");
-          button.className =
-            "category-button" + (currentCategory === category ? " active" : "");
-          button.textContent = category;
-          button.addEventListener("click", () => {
-            currentCategory = category;
-            updateActiveCategoryButton(category);
-            fetchAndDisplayPaintings(category); // Fetch paintings for this category
-          });
-          categoryNav.appendChild(button);
-        });
-      }
-
-      function updateActiveCategoryButton(activeCategory) {
-        document.querySelectorAll(".category-button").forEach((button) => {
-          if (
-            button.textContent === "All Categories" &&
-            activeCategory === null
-          ) {
-            button.classList.add("active");
-          } else if (button.textContent === activeCategory) {
-            button.classList.add("active");
-          } else {
-            button.classList.remove("active");
-          }
-        });
-      }
-
-      async function fetchAndDisplayPaintings(category = null) {
-        loadingMessage.style.display = "block";
-        errorMessage.style.display = "none";
-        noPaintingsMessage.style.display = "none";
-        reorderMessage.style.display = "none";
-        galleryContainer.innerHTML = ""; // Clear previous content
-
+        // Initialize SortableJS for drag-and-drop reordering
         if (sortableInstance) {
-          sortableInstance.destroy();
-          sortableInstance = null;
+          sortableInstance.destroy(); // Destroy previous instance if it exists
         }
+        sortableInstance = Sortable.create(paintingsContainer, {
+          animation: 150,
+          ghostClass: "sortable-ghost", // Class name for the drop placeholder
+          chosenClass: "sortable-chosen", // Class name for the chosen item
+          onEnd: async function (evt) {
+            // This event fires when the user finishes dragging and dropping
+            const newOrder = [];
+            Array.from(paintingsContainer.children).forEach((card, index) => {
+              // Ensure we only process actual painting cards
+              if (card.dataset && card.dataset.id) {
+                newOrder.push({
+                  _id: card.dataset.id,
+                  order: index, // New order is based on its current position in the DOM
+                });
+              }
+            });
 
+            console.log("New order to send:", newOrder);
+            displayMessage("Updating order...", "loading", 0); // Show loading message
+
+            try {
+              const updateResponse = await authorizedFetch(
+                `${API_BASE_URL}/painting/reorder`,
+                {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(newOrder),
+                }
+              );
+
+              if (updateResponse.ok) {
+                displayMessage("Order updated successfully!", "success");
+                // Re-fetch and re-render to ensure UI and backend are fully synchronized
+                fetchPaintings(currentCategoryFilter);
+              } else {
+                const errorData = await updateResponse.json();
+                displayMessage(
+                  errorData.message ||
+                    `Failed to update order. Status: ${updateResponse.status}`,
+                  "error",
+                  0
+                );
+                // On error, re-fetch to revert UI to backend state
+                fetchPaintings(currentCategoryFilter);
+              }
+            } catch (error) {
+              if (error.message !== "Unauthorized") {
+                console.error("Error sending reorder update:", error);
+                displayMessage(
+                  "Network error during reorder. Please check server connection.",
+                  "error",
+                  0
+                );
+                fetchPaintings(currentCategoryFilter); // Revert UI
+              }
+            }
+          },
+        });
+
+        // Attach event listeners for edit and delete buttons after rendering
+        addPaintingActionListeners();
+      }
+
+      /**
+       * Fetches paintings from the backend and renders them.
+       * @param {string} category - Optional category to filter by. 'all' for no filter.
+       */
+      async function fetchPaintings(category = "all") {
+        currentCategoryFilter = category; // Update global filter state
+        displayMessage("Loading paintings...", "loading", 0);
         try {
-          let url = "/api/painting";
-          if (category) {
+          let url = `${API_BASE_URL}/painting`;
+          if (category !== "all") {
             url += `?category=${encodeURIComponent(category)}`;
           }
 
-          // This initial fetch for all paintings/categories does not require auth,
-          // but any subsequent calls that modify data will.
-          // For fetching, plain fetch is fine as GET /painting is unprotected.
-          const response = await fetch(url);
-          const paintings = await response.json();
-
-          loadingMessage.style.display = "none";
+          const response = await authorizedFetch(url); // Use authorizedFetch
 
           if (response.ok) {
-            if (paintings.length === 0) {
-              noPaintingsMessage.style.display = "block";
-              noPaintingsMessage.textContent = category
-                ? `No paintings found in the "${category}" category.`
-                : `No paintings found yet. Be the first to add one!`;
-            } else {
-              paintings.forEach((painting) => {
-                const paintingCard = document.createElement("div");
-                paintingCard.className = "painting-card";
-                paintingCard.dataset.id = painting._id;
-                paintingCard.dataset.order = painting.order;
-
-                paintingCard.innerHTML = `
-                                <img src="${
-                                  painting.imageUrl ||
-                                  "https://via.placeholder.com/300x250?text=No+Image"
-                                }" alt="${painting.name || "Untitled"}">
-                                <div class="painting-info">
-                                    <h2>${painting.name}</h2>
-                                    <p><strong>Category:</strong> ${
-                                      painting.category
-                                    }</p>
-                                    <p><strong>Medium:</strong> ${
-                                      painting.medium
-                                    }</p>
-                                    <p><strong>Size:</strong> ${
-                                      painting.size
-                                    }</p>
-                                    <p><strong>Colour:</strong> ${
-                                      painting.colour || "N/A"
-                                    }</p>
-                                    <p><strong>Order:</strong> ${
-                                      painting.order
-                                    }</p>
-                                    <p><small>ID: ${painting._id}</small></p>
-                                </div>
-                            `;
-                galleryContainer.appendChild(paintingCard);
-              });
-
-              // Initialize SortableJS only if there are paintings to sort
-              sortableInstance = Sortable.create(galleryContainer, {
-                animation: 150,
-                ghostClass: "sortable-ghost",
-                chosenClass: "sortable-chosen",
-                onEnd: async function (evt) {
-                  const newOrder = [];
-                  Array.from(galleryContainer.children).forEach(
-                    (card, index) => {
-                      if (card.dataset && card.dataset.id) {
-                        newOrder.push({
-                          _id: card.dataset.id,
-                          order: index,
-                        });
-                      }
-                    }
-                  );
-
-                  console.log("New order to send:", newOrder);
-
-                  try {
-                    // Use authorizedFetch for protected reorder endpoint
-                    const updateResponse = await authorizedFetch(
-                      "/api/painting/reorder",
-                      {
-                        method: "PATCH",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify(newOrder),
-                      }
-                    );
-
-                    if (updateResponse.ok) {
-                      displayMessage(
-                        reorderMessage,
-                        "Order updated successfully!",
-                        "success"
-                      );
-                      fetchAndDisplayPaintings(currentCategory);
-                    } else {
-                      const errorData = await updateResponse.json();
-                      displayMessage(
-                        reorderMessage,
-                        `Failed to update order: ${
-                          errorData.message || "Unknown error"
-                        }`,
-                        "error"
-                      );
-                      fetchAndDisplayPaintings(currentCategory);
-                    }
-                  } catch (error) {
-                    // authorizedFetch might throw 'Unauthorized' so catch it here
-                    if (error.message !== "Unauthorized") {
-                      console.error("Error sending reorder update:", error);
-                      displayMessage(
-                        reorderMessage,
-                        "Network error during reorder update. Please check server.",
-                        "error"
-                      );
-                      fetchAndDisplayPaintings(currentCategory);
-                    }
-                  }
-                },
-              });
-            }
+            const paintings = await response.json();
+            renderPaintings(paintings);
+            displayMessage("Paintings loaded successfully!", "success");
+            populateCategoryFilters(paintings); // Update filters after fetching
           } else {
-            errorMessage.style.display = "block";
-            errorMessage.textContent = `Error fetching paintings: ${
-              paintings.message || "Unknown error"
-            }`;
+            const errorData = await response.json();
+            displayMessage(
+              errorData.message || "Failed to load paintings.",
+              "error",
+              0
+            );
           }
         } catch (error) {
+          // 'Unauthorized' errors are handled by authorizedFetch, so just log others
           if (error.message !== "Unauthorized") {
-            loadingMessage.style.display = "none";
-            errorMessage.style.display = "block";
-            errorMessage.textContent = `Network error: Could not connect to the server. (${error.message})`;
             console.error("Error fetching paintings:", error);
+            displayMessage(
+              "An unexpected error occurred while loading paintings.",
+              "error",
+              0
+            );
           }
         }
       }
 
-      // Initialize by fetching categories and then displaying default (all) paintings
-      document.addEventListener("DOMContentLoaded", async () => {
-        // Only proceed if a token exists
+      /**
+       * Adds click listeners to edit and delete buttons.
+       */
+      function addPaintingActionListeners() {
+        document.querySelectorAll(".edit-btn").forEach((button) => {
+          button.addEventListener("click", (event) => {
+            const paintingId = event.target.dataset.id;
+            // Redirect to edit-painting.html with the painting ID as a query parameter
+            window.location.href = `edit-painting.html?id=${paintingId}`;
+          });
+        });
+
+        document.querySelectorAll(".delete-btn").forEach((button) => {
+          button.addEventListener("click", (event) => {
+            paintingToDeleteId = event.target.dataset.id;
+            deleteConfirmationModal.style.display = "flex"; // Show the modal
+          });
+        });
+      }
+
+      // --- Delete Confirmation Modal Logic ---
+      confirmDeleteBtn.addEventListener("click", async () => {
+        if (paintingToDeleteId) {
+          deleteConfirmationModal.style.display = "none"; // Hide modal immediately
+          displayMessage("Deleting painting...", "loading", 0);
+          try {
+            const response = await authorizedFetch(
+              `${API_BASE_URL}/painting/${paintingToDeleteId}`,
+              {
+                method: "DELETE",
+              }
+            );
+
+            if (response.ok) {
+              displayMessage("Painting deleted successfully!", "success");
+              fetchPaintings(currentCategoryFilter); // Re-fetch paintings to update the list
+            } else {
+              const errorData = await response.json();
+              displayMessage(
+                errorData.message || "Failed to delete painting.",
+                "error",
+                0
+              );
+            }
+          } catch (error) {
+            if (error.message !== "Unauthorized") {
+              console.error("Error deleting painting:", error);
+              displayMessage(
+                "An unexpected error occurred during deletion.",
+                "error",
+                0
+              );
+            }
+          } finally {
+            paintingToDeleteId = null; // Reset the ID
+          }
+        }
+      });
+
+      cancelDeleteBtn.addEventListener("click", () => {
+        deleteConfirmationModal.style.display = "none"; // Hide the modal
+        paintingToDeleteId = null; // Reset the ID
+        messageDiv.style.display = "none"; // Clear any lingering loading message
+      });
+
+      // Close modal if user clicks outside of it
+      window.addEventListener("click", (event) => {
+        if (event.target === deleteConfirmationModal) {
+          deleteConfirmationModal.style.display = "none";
+          paintingToDeleteId = null;
+          messageDiv.style.display = "none";
+        }
+      });
+
+      // --- Category Filtering Logic ---
+      function populateCategoryFilters(paintings) {
+        const uniqueCategories = new Set();
+        // Collect all unique categories from the fetched paintings
+        paintings.forEach((p) => uniqueCategories.add(p.category));
+
+        // Clear existing buttons and add "All" button
+        categoryFilterContainer.innerHTML =
+          '<button class="filter-btn" data-category="all">All</button>';
+
+        // Add buttons for each unique category
+        Array.from(uniqueCategories)
+          .sort() // Sort categories alphabetically
+          .forEach((category) => {
+            const button = document.createElement("button");
+            button.className = "filter-btn";
+            button.dataset.category = category;
+            button.textContent = category;
+            categoryFilterContainer.appendChild(button);
+          });
+
+        // Add event listeners to all category filter buttons
+        document.querySelectorAll(".filter-btn").forEach((button) => {
+          button.addEventListener("click", (event) => {
+            const selectedCategory = event.target.dataset.category;
+            // Update active state of buttons
+            document.querySelectorAll(".filter-btn").forEach((btn) => {
+              btn.classList.remove("active");
+            });
+            event.target.classList.add("active");
+
+            // Fetch paintings based on the selected category
+            fetchPaintings(selectedCategory);
+          });
+        });
+
+        // Set the active class on the initially selected category button
+        const activeBtn = document.querySelector(
+          `.filter-btn[data-category="${currentCategoryFilter}"]`
+        );
+        if (activeBtn) {
+          activeBtn.classList.add("active");
+        } else {
+          // Fallback to "All" if current filter isn't found (e.g., category removed)
+          document
+            .querySelector('.filter-btn[data-category="all"]')
+            .classList.add("active");
+          currentCategoryFilter = "all";
+        }
+      }
+
+      // --- Initial Load ---
+      document.addEventListener("DOMContentLoaded", () => {
         if (token) {
-          await fetchCategories();
-          await fetchAndDisplayPaintings();
-          updateActiveCategoryButton(null);
+          fetchPaintings(); // Load all paintings on initial page load
         }
       });
     </script>
