@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Painting</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 20px;
+        background: #fafafa;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      input,
+      select {
+        padding: 8px;
+        font-size: 16px;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      img {
+        max-width: 100%;
+        margin-top: 10px;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Edit Painting</h1>
+    <form id="editForm">
+      <label>Name <input type="text" name="name" required /></label>
+      <label>Category <input type="text" name="category" required /></label>
+      <label>Medium <input type="text" name="medium" /></label>
+      <label>Size <input type="text" name="size" /></label>
+      <label>Colour <input type="text" name="colour" /></label>
+      <label>Order <input type="number" name="order" min="0" /></label>
+      <label
+        >Change Image <input type="file" name="image" accept="image/*"
+      /></label>
+      <img id="preview" src="" alt="Painting preview" />
+      <button type="submit">Save Changes</button>
+    </form>
+    <button id="backBtn" style="margin-top: 15px">← Back to Gallery</button>
+
+    <script>
+      const API_BASE_URL = "/api/painting";
+      const token = localStorage.getItem("token");
+      const paintingId = new URLSearchParams(window.location.search).get("id");
+      const form = document.getElementById("editForm");
+      const preview = document.getElementById("preview");
+
+      // Redirect if not logged in
+      if (!token) {
+        window.location.href = "/login.html";
+      }
+
+      // Load existing painting
+      async function loadPainting() {
+        try {
+          const res = await fetch(`${API_BASE_URL}/${paintingId}`);
+          if (!res.ok) throw new Error("Failed to fetch painting");
+          const painting = await res.json();
+
+          form.name.value = painting.name || "";
+          form.category.value = painting.category || "";
+          form.medium.value = painting.medium || "";
+          form.size.value = painting.size || "";
+          form.colour.value = painting.colour || "";
+          form.order.value = painting.order || "";
+          preview.src =
+            painting.imageUrl || "https://placehold.co/600x400?text=No+Image";
+        } catch (err) {
+          alert("Error loading painting: " + err.message);
+        }
+      }
+
+      // Show preview when uploading a new image
+      form.image.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = () => (preview.src = reader.result);
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Submit updated data
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+
+        try {
+          const res = await fetch(`${API_BASE_URL}/${paintingId}`, {
+            method: "PATCH",
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData, // includes file if selected
+          });
+
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.message || "Failed to update painting");
+          }
+
+          alert("Painting updated successfully!");
+          window.location.href = "/gallery.html";
+        } catch (err) {
+          alert("Error: " + err.message);
+        }
+      });
+
+      // Back button
+      document.getElementById("backBtn").addEventListener("click", () => {
+        window.location.href = "/gallery.html";
+      });
+
+      loadPainting();
+    </script>
+  </body>
+</html>
